@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - BeatFlow</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0A0A1F">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/utils.min.css">
+    <link rel="stylesheet" href="/static/css/components.min.css">
+    
+    <style>
+        .offline-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+            background: var(--background);
+            color: var(--text);
+        }
+        
+        .offline-content {
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2rem;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .offline-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .offline-message {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .offline-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .cached-content {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.5s ease forwards;
+        }
+        
+        .cached-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--surface-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .cached-item:hover {
+            transform: translateX(4px);
+            background: var(--surface-lighter);
+        }
+        
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 2rem;
+        }
+        
+        .sync-status.syncing::after {
+            content: '';
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--primary);
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 640px) {
+            .offline-title {
+                font-size: 1.5rem;
+            }
+            
+            .offline-message {
+                font-size: 1rem;
+            }
+            
+            .offline-icon {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-content">
+            <img src="/static/img/offline.svg" alt="Offline" class="offline-icon">
+            
+            <h1 class="offline-title">You're Offline</h1>
+            <p class="offline-message">
+                No internet connection found. Check your connection or continue working offline.
+            </p>
+            
+            <div class="offline-actions">
+                <button class="btn btn-primary" onclick="checkConnection()">
+                    <i class="fas fa-sync"></i>
+                    <span>Try Again</span>
+                </button>
+                
+                <button class="btn btn-secondary" onclick="showCachedContent()">
+                    <i class="fas fa-archive"></i>
+                    <span>View Cached Beats</span>
+                </button>
+            </div>
+            
+            <div id="cachedContent" class="cached-content" style="display: none">
+                <h2 class="text-lg font-bold mb-4">Your Offline Beats</h2>
+                <div id="cachedList" class="space-y-2"></div>
+            </div>
+            
+            <div id="syncStatus" class="sync-status" style="display: none">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Changes will sync when you're back online</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script>
+        // Check connection status
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.reload();
+            } else {
+                showOfflineMessage();
+            }
+        }
+        
+        // Show offline message with animation
+        function showOfflineMessage() {
+            const message = document.querySelector('.offline-message');
+            message.style.animation = 'shake 0.5s ease-in-out';
+            setTimeout(() => {
+                message.style.animation = '';
+            }, 500);
+        }
+        
+        // Show cached content
+        async function showCachedContent() {
+            const cachedContent = document.getElementById('cachedContent');
+            const cachedList = document.getElementById('cachedList');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            try {
+                // Get cached beats
+                const cache = await caches.open('beatflow-v1');
+                const requests = await cache.keys();
+                const beatRequests = requests.filter(request => 
+                    request.url.includes('/api/beats')
+                );
+                
+                if (beatRequests.length === 0) {
+                    cachedList.innerHTML = `
+                        <div class="text-center text-text-secondary py-4">
+                            No cached beats found
+                        </div>
+                    `;
+                } else {
+                    // Display cached beats
+                    const beats = await Promise.all(
+                        beatRequests.map(async request => {
+                            const response = await cache.match(request);
+                            return await response.json();
+                        })
+                    );
+                    
+                    cachedList.innerHTML = beats.map(beat => `
+                        <div class="cached-item">
+                            <i class="fas fa-music text-primary"></i>
+                            <div class="flex-1">
+                                <div class="font-medium">${beat.title}</div>
+                                <div class="text-sm text-text-secondary">
+                                    Last modified: ${new Date(beat.updated_at).toLocaleString()}
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="loadBeat('${beat.id}')">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+                
+                cachedContent.style.display = 'block';
+                syncStatus.style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error loading cached content:', error);
+            }
+        }
+        
+        // Load cached beat
+        async function loadBeat(beatId) {
+            try {
+                const cache = await caches.open('beatflow-v1');
+                const request = new Request(`/api/beats/${beatId}`);
+                const response = await cache.match(request);
+                
+                if (response) {
+                    const beat = await response.json();
+                    // Initialize beat maker with cached data
+                    initializeBeatMaker(beat);
+                }
+            } catch (error) {
+                console.error('Error loading beat:', error);
+            }
+        }
+        
+        // Initialize beat maker with offline support
+        function initializeBeatMaker(beat) {
+            // Load beat maker UI
+            const script = document.createElement('script');
+            script.src = '/static/js/components.min.js';
+            script.onload = () => {
+                const container = document.createElement('div');
+                container.className = 'beat-maker-container';
+                document.body.appendChild(container);
+                
+                // Initialize beat maker with offline mode
+                const beatMaker = new BeatMaker({
+                    ...beat,
+                    offlineMode: true
+                });
+                
+                // Initialize UI
+                new BeatMakerUI(beatMaker, container);
+                
+                // Hide offline content
+                document.querySelector('.offline-content').style.display = 'none';
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Listen for online status changes
+        window.addEventListener('online', () => {
+            // Sync changes when back online
+            if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.sync.register('sync-beats');
+                });
+            }
+            
+            // Show sync status
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.classList.add('syncing');
+            syncStatus.querySelector('span').textContent = 'Syncing changes...';
+            
+            // Reload after short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        });
+        
+        // Check initial connection status
+        if (navigator.onLine) {
+            window.location.reload();
+        }
+    </script>
+    
+    <!-- Font Awesome (loaded from cache) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html> 

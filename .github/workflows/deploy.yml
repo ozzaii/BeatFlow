@@ -1,0 +1,98 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+      GITHUB_PAGES_URL: ${{ secrets.GITHUB_PAGES_URL }}
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+          
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Install Node.js dependencies
+        run: |
+          npm install -g sass
+          npm install -g uglify-js
+          npm install -g clean-css-cli
+          
+      - name: Run tests
+        run: |
+          python -m pytest tests/
+          
+      - name: Build static assets
+        run: |
+          # Compile SASS
+          sass static/scss:static/css --style compressed
+          
+          # Minify JavaScript
+          for file in static/js/components/*.js; do
+            uglifyjs "$file" -o "${file%.js}.min.js"
+          done
+          
+          # Minify CSS
+          for file in static/css/components/*.css; do
+            cleancss -o "${file%.css}.min.css" "$file"
+          done
+          
+      - name: Generate service worker
+        run: |
+          python scripts/generate_sw.py
+          
+      - name: Build application
+        run: |
+          python scripts/build.py
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          cname: beatflow.app
+          
+      - name: Update environment variables
+        run: |
+          # Create .env file
+          echo "FLASK_APP=musicstagram.py" > .env
+          echo "FLASK_ENV=production" >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> .env
+          echo "SUPABASE_JWT_SECRET=${{ secrets.SUPABASE_JWT_SECRET }}" >> .env
+          echo "GITHUB_PAGES_URL=${{ secrets.GITHUB_PAGES_URL }}" >> .env
+          echo "MAX_UPLOAD_SIZE=50MB" >> .env
+          
+      - name: Notify deployment status
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: "BeatFlow Deployment"
+          SLACK_MESSAGE: "Deployment ${{ job.status }}" 

@@ -4,6 +4,12 @@ class BeatMakerUI {
         this.container = container;
         this.gridElements = new Map();
         this.currentBeat = -1;
+        this.events = {};
+        
+        // Collaboration state
+        this.collaborators = new Map();
+        this.activeCollaborator = null;
+        this.lastCollaboratorAction = null;
         
         this.init();
     }
@@ -14,6 +20,232 @@ class BeatMakerUI {
         this.createEffectsPanel();
         this.setupEventListeners();
         this.startUILoop();
+        
+        // Initialize collaboration UI if enabled
+        if (this.beatMaker.config.enableCollaboration) {
+            this.initializeCollaborationUI();
+        }
+    }
+    
+    initializeCollaborationUI() {
+        // Create collaboration status indicator
+        const statusIndicator = document.createElement('div');
+        statusIndicator.className = 'collaboration-status glass';
+        statusIndicator.innerHTML = `
+            <div class="flex items-center gap-2">
+                <div class="status-dot"></div>
+                <span class="status-text">Connecting...</span>
+            </div>
+            <div class="collaborators-count">
+                <i class="fas fa-users"></i>
+                <span>0</span>
+            </div>
+        `;
+        
+        this.container.appendChild(statusIndicator);
+        this.statusIndicator = statusIndicator;
+        
+        // Create collaborator cursors container
+        const cursorsContainer = document.createElement('div');
+        cursorsContainer.className = 'collaborator-cursors';
+        this.container.appendChild(cursorsContainer);
+        this.cursorsContainer = cursorsContainer;
+        
+        // Create collaboration actions overlay
+        const actionsOverlay = document.createElement('div');
+        actionsOverlay.className = 'collaboration-actions-overlay';
+        this.container.appendChild(actionsOverlay);
+        this.actionsOverlay = actionsOverlay;
+        
+        // Set up collaboration event listeners
+        this.setupCollaborationEventListeners();
+    }
+    
+    setupCollaborationEventListeners() {
+        // Listen for collaboration status changes
+        this.beatMaker.collaboration?.on('connected', () => {
+            this.updateCollaborationStatus('connected');
+        });
+        
+        this.beatMaker.collaboration?.on('disconnected', () => {
+            this.updateCollaborationStatus('disconnected');
+        });
+        
+        // Listen for collaborator updates
+        this.beatMaker.collaboration?.on('collaboratorsUpdate', (collaborators) => {
+            this.updateCollaborators(collaborators);
+        });
+        
+        this.beatMaker.collaboration?.on('collaboratorJoin', (collaborator) => {
+            this.showCollaboratorAction(collaborator, 'joined');
+        });
+        
+        this.beatMaker.collaboration?.on('collaboratorLeave', (collaborator) => {
+            this.showCollaboratorAction(collaborator, 'left');
+        });
+        
+        // Listen for remote changes
+        this.beatMaker.collaboration?.on('remoteChange', (change) => {
+            this.handleRemoteChange(change);
+        });
+        
+        // Track cursor movements
+        this.container.addEventListener('mousemove', (e) => {
+            if (this.beatMaker.collaboration) {
+                const rect = this.container.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+                const y = (e.clientY - rect.top) / rect.height;
+                
+                this.beatMaker.collaboration.updateCursorPosition(x, y);
+            }
+        });
+    }
+    
+    updateCollaborationStatus(status) {
+        const dot = this.statusIndicator.querySelector('.status-dot');
+        const text = this.statusIndicator.querySelector('.status-text');
+        
+        dot.className = `status-dot status-${status}`;
+        
+        switch (status) {
+            case 'connected':
+                text.textContent = 'Connected';
+                break;
+            case 'disconnected':
+                text.textContent = 'Disconnected';
+                break;
+            case 'connecting':
+                text.textContent = 'Connecting...';
+                break;
+        }
+    }
+    
+    updateCollaborators(collaborators) {
+        this.collaborators = new Map(collaborators);
+        
+        // Update count
+        const count = this.statusIndicator.querySelector('.collaborators-count span');
+        count.textContent = this.collaborators.size;
+        
+        // Update cursors
+        this.updateCollaboratorCursors();
+    }
+    
+    updateCollaboratorCursors() {
+        this.cursorsContainer.innerHTML = '';
+        
+        this.collaborators.forEach((collaborator, id) => {
+            if (id !== this.beatMaker.config.currentUser.id && collaborator.cursor) {
+                const cursor = document.createElement('div');
+                cursor.className = 'collaborator-cursor';
+                cursor.style.left = `${collaborator.cursor.x * 100}%`;
+                cursor.style.top = `${collaborator.cursor.y * 100}%`;
+                
+                cursor.innerHTML = `
+                    <div class="cursor-pointer"></div>
+                    <div class="cursor-label glass">
+                        ${collaborator.username}
+                    </div>
+                `;
+                
+                this.cursorsContainer.appendChild(cursor);
+            }
+        });
+    }
+    
+    showCollaboratorAction(collaborator, action) {
+        const actionEl = document.createElement('div');
+        actionEl.className = 'collaboration-action glass';
+        
+        actionEl.innerHTML = `
+            <div class="flex items-center gap-2">
+                <img src="${collaborator.avatar_url || '/static/img/default-avatar.png'}" 
+                     alt="${collaborator.username}"
+                     class="w-6 h-6 rounded-full">
+                <span class="text-sm">
+                    <strong>${collaborator.username}</strong> ${action}
+                </span>
+            </div>
+        `;
+        
+        this.actionsOverlay.appendChild(actionEl);
+        
+        // Remove after delay
+        setTimeout(() => {
+            actionEl.remove();
+        }, 3000);
+    }
+    
+    handleRemoteChange(change) {
+        switch (change.type) {
+            case 'pattern':
+                this.updatePattern(change.pattern, false);
+                this.showCollaboratorAction(change.user, 'updated the pattern');
+                break;
+                
+            case 'effect':
+                this.updateEffectParam(change.effect, change.param, change.value, false);
+                this.showCollaboratorAction(change.user, `adjusted ${change.effect}`);
+                break;
+                
+            case 'tempo':
+                this.updateTempo(change.value, false);
+                this.showCollaboratorAction(change.user, 'changed the tempo');
+                break;
+        }
+    }
+    
+    updatePattern(pattern, broadcast = true) {
+        Object.entries(pattern).forEach(([trackName, trackPattern]) => {
+            const elements = this.gridElements.get(trackName);
+            if (elements) {
+                trackPattern.forEach((value, step) => {
+                    elements[step].classList.toggle('active', Boolean(value));
+                });
+            }
+        });
+        
+        if (broadcast) {
+            this.emit('patternChange', { pattern });
+        }
+    }
+    
+    updateEffectParam(effect, param, value, broadcast = true) {
+        const input = this.container.querySelector(`input[data-effect="${effect}"][data-param="${param}"]`);
+        if (input) {
+            input.value = value * 100;
+        }
+        
+        if (broadcast) {
+            this.emit('effectChange', { effect, param, value });
+        }
+    }
+    
+    updateTempo(value, broadcast = true) {
+        const input = this.container.querySelector('.bpm-control input');
+        if (input) {
+            input.value = value;
+        }
+        
+        if (broadcast) {
+            this.emit('tempoChange', value);
+        }
+    }
+    
+    // Event emitter methods
+    on(event, callback) {
+        if (!this.events[event]) this.events[event] = [];
+        this.events[event].push(callback);
+    }
+    
+    off(event, callback) {
+        if (!this.events[event]) return;
+        this.events[event] = this.events[event].filter(cb => cb !== callback);
+    }
+    
+    emit(event, data) {
+        if (!this.events[event]) return;
+        this.events[event].forEach(callback => callback(data));
     }
     
     createControls() {
@@ -218,6 +450,16 @@ class BeatMakerUI {
                 elements[step].classList.toggle('active', Boolean(value));
             });
         });
+    }
+    
+    destroy() {
+        // Clean up event listeners
+        this.events = {};
+        
+        // Remove collaboration UI elements
+        this.statusIndicator?.remove();
+        this.cursorsContainer?.remove();
+        this.actionsOverlay?.remove();
     }
 }
 

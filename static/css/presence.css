@@ -1,0 +1,238 @@
+/* Presence Container */
+.presence-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    width: 280px;
+    background-color: var(--surface);
+    border: 1px solid var(--surface-light);
+    border-radius: 1rem;
+    padding: 1rem;
+    z-index: 900;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.presence-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Presence Header */
+.presence-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.presence-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.presence-header i {
+    font-size: 1rem;
+    color: var(--primary);
+    text-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* Presence List */
+.presence-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: -0.5rem;
+    padding: 0.5rem;
+}
+
+.presence-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.presence-list::-webkit-scrollbar-track {
+    background: var(--surface-light);
+    border-radius: 2px;
+}
+
+.presence-list::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+/* Presence Item */
+.presence-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.presence-item:hover {
+    background-color: var(--surface-light);
+}
+
+.presence-item + .presence-item {
+    margin-top: 0.5rem;
+}
+
+/* User Avatar */
+.user-avatar {
+    position: relative;
+    width: 36px;
+    height: 36px;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+}
+
+.status-active {
+    background-color: var(--success);
+    box-shadow: 0 0 0 2px var(--success-glow);
+}
+
+.status-idle {
+    background-color: var(--warning);
+    box-shadow: 0 0 0 2px var(--warning-glow);
+}
+
+.status-away {
+    background-color: var(--error);
+    box-shadow: 0 0 0 2px var(--error-glow);
+}
+
+.status-editing {
+    background-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-glow);
+    animation: pulse 2s infinite;
+}
+
+.status-offline {
+    background-color: var(--text-secondary);
+}
+
+/* User Info */
+.user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.username {
+    display: block;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-state {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.user-state i {
+    font-size: 0.875rem;
+}
+
+/* Cursor Indicators */
+.cursor-indicators {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 899;
+}
+
+.cursor-indicator {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    transition: all 0.1s ease;
+}
+
+.cursor-pointer {
+    width: 12px;
+    height: 12px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    opacity: 0.8;
+}
+
+.cursor-label {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--surface);
+    color: var(--text);
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    white-space: nowrap;
+    margin-top: 0.5rem;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 var(--primary-glow);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(var(--primary-rgb), 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    .presence-container {
+        top: auto;
+        bottom: 1rem;
+        right: 1rem;
+        width: calc(100% - 2rem);
+        max-width: 280px;
+    }
+    
+    .presence-list {
+        max-height: 200px;
+    }
+}
+
+/* Dark Mode Optimizations */
+@media (prefers-color-scheme: dark) {
+    .presence-container {
+        background-color: rgba(30, 30, 30, 0.95);
+    }
+    
+    .cursor-label {
+        background-color: rgba(30, 30, 30, 0.95);
+    }
+    
+    .status-indicator {
+        border-color: rgba(30, 30, 30, 0.95);
+    }
+} 

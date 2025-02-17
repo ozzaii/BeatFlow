@@ -1,0 +1,301 @@
+/* Collaboration Container */
+.collaboration-container {
+    position: relative;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1rem;
+    height: 100%;
+}
+
+/* Collaboration Sidebar */
+.collaboration-sidebar {
+    position: fixed;
+    top: 5rem;
+    right: 1rem;
+    width: 300px;
+    height: calc(100vh - 6rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(26, 26, 47, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 245, 255, 0.1);
+    border-radius: 1rem;
+    transition: all var(--transition-normal);
+    z-index: 100;
+}
+
+.collaboration-sidebar:hover {
+    border-color: rgba(0, 245, 255, 0.2);
+    box-shadow: var(--shadow-glow);
+}
+
+/* Components Container */
+.collaboration-components {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--surface);
+}
+
+.collaboration-components::-webkit-scrollbar {
+    width: 4px;
+}
+
+.collaboration-components::-webkit-scrollbar-track {
+    background: var(--surface);
+    border-radius: 2px;
+}
+
+.collaboration-components::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+/* Chat Container */
+.collaboration-chat {
+    height: 300px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+}
+
+/* Collaboration Overlay */
+.collaboration-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 90;
+}
+
+/* Collaborator Actions */
+.collaborator-action {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.75rem 1rem;
+    background: rgba(26, 26, 47, 0.9);
+    border: 1px solid rgba(0, 245, 255, 0.2);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-glow);
+    animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 2.7s;
+}
+
+.collaborator-action img {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Component Sections */
+.collaboration-section {
+    background: var(--surface);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    transition: var(--transition-fast);
+}
+
+.collaboration-section:hover {
+    background: var(--surface-light);
+}
+
+.collaboration-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.collaboration-section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* Minimize/Maximize Buttons */
+.minimize-btn,
+.maximize-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color var(--transition-fast);
+}
+
+.minimize-btn:hover,
+.maximize-btn:hover {
+    color: var(--primary);
+}
+
+/* Minimized States */
+.collaboration-section.minimized {
+    padding: 0.75rem;
+}
+
+.collaboration-section.minimized .collaboration-section-content {
+    display: none;
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* Loading States */
+.collaboration-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+}
+
+.collaboration-loading::after {
+    content: '';
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--primary);
+    border-right-color: transparent;
+    border-radius: 50%;
+    margin-left: 0.5rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error States */
+.collaboration-error {
+    padding: 1rem;
+    background: var(--error-light);
+    border: 1px solid var(--error);
+    border-radius: 0.5rem;
+    color: var(--error);
+    margin-bottom: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .collaboration-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .collaboration-sidebar {
+        position: fixed;
+        right: 1rem;
+        width: 280px;
+        transform: translateX(100%);
+        transition: transform var(--transition-normal);
+    }
+    
+    .collaboration-sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .collaboration-toggle {
+        position: fixed;
+        top: 5rem;
+        right: 1rem;
+        background: var(--primary);
+        color: var(--background);
+        border: none;
+        border-radius: 50%;
+        width: 3rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 101;
+        transition: all var(--transition-normal);
+    }
+    
+    .collaboration-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow-glow);
+    }
+    
+    .collaboration-toggle.active {
+        background: var(--error);
+    }
+}
+
+@media (max-width: 640px) {
+    .collaboration-sidebar {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 60%;
+        border-radius: 1rem 1rem 0 0;
+        transform: translateY(100%);
+    }
+    
+    .collaboration-sidebar.show {
+        transform: translateY(0);
+    }
+    
+    .collaboration-toggle {
+        bottom: 1rem;
+        right: 1rem;
+        top: auto;
+    }
+    
+    .collaboration-chat {
+        height: 200px;
+    }
+    
+    .collaborator-action {
+        width: 90%;
+        left: 5%;
+        transform: none;
+    }
+}
+
+/* Dark Mode Optimizations */
+@media (prefers-color-scheme: dark) {
+    .collaboration-sidebar {
+        background: rgba(10, 10, 31, 0.9);
+    }
+    
+    .collaboration-section {
+        background: rgba(26, 26, 47, 0.8);
+    }
+    
+    .collaboration-error {
+        background: rgba(255, 0, 0, 0.1);
+    }
+} 

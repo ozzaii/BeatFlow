@@ -1,0 +1,317 @@
+/* Collaboration Status */
+.collaboration-status {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: rgba(26, 26, 47, 0.9);
+    border: 1px solid rgba(0, 245, 255, 0.2);
+    border-radius: 0.5rem;
+    z-index: 100;
+    min-width: 180px;
+    transition: all var(--transition-normal);
+}
+
+.collaboration-status:hover {
+    border-color: rgba(0, 245, 255, 0.4);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    transition: background-color var(--transition-fast);
+}
+
+.status-dot.status-connected {
+    background-color: var(--success);
+    box-shadow: 0 0 10px var(--success-glow);
+    animation: pulse 2s infinite;
+}
+
+.status-dot.status-connecting {
+    background-color: var(--warning);
+    box-shadow: 0 0 10px var(--warning-glow);
+    animation: pulse 1s infinite;
+}
+
+.status-dot.status-disconnected {
+    background-color: var(--error);
+    box-shadow: 0 0 10px var(--error-glow);
+}
+
+.status-text {
+    font-size: 0.875rem;
+    color: var(--text);
+}
+
+.collaborators-count {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.collaborators-count i {
+    color: var(--primary);
+}
+
+/* Collaborator Cursors */
+.collaborator-cursors {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 90;
+}
+
+.collaborator-cursor {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    transition: all 0.1s ease;
+}
+
+.cursor-pointer {
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    opacity: 0.8;
+    transform-origin: center;
+    animation: cursorPulse 2s infinite;
+}
+
+.cursor-label {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.25rem 0.5rem;
+    background: rgba(26, 26, 47, 0.9);
+    border: 1px solid rgba(0, 245, 255, 0.2);
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    margin-top: 0.5rem;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.collaborator-cursor:hover .cursor-label {
+    opacity: 1;
+}
+
+/* Collaboration Actions Overlay */
+.collaboration-actions-overlay {
+    position: fixed;
+    top: 4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 95;
+    pointer-events: none;
+}
+
+.collaboration-action {
+    padding: 0.75rem 1rem;
+    background: rgba(26, 26, 47, 0.9);
+    border: 1px solid rgba(0, 245, 255, 0.2);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-glow);
+    animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 2.7s;
+    max-width: 90vw;
+}
+
+.collaboration-action img {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes cursorPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* Loading States */
+.collaboration-loading {
+    position: relative;
+}
+
+.collaboration-loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(26, 26, 47, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.collaboration-loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid var(--primary);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .collaboration-status {
+        top: auto;
+        bottom: 1rem;
+        right: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .collaboration-status {
+        min-width: 140px;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .collaboration-action {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .collaboration-action img {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .collaboration-status {
+        right: 0.5rem;
+        bottom: 0.5rem;
+    }
+    
+    .collaborators-count {
+        display: none;
+    }
+    
+    .collaboration-action {
+        max-width: calc(100vw - 2rem);
+    }
+}
+
+/* Dark Mode Optimizations */
+@media (prefers-color-scheme: dark) {
+    .collaboration-status,
+    .cursor-label,
+    .collaboration-action {
+        background: rgba(10, 10, 31, 0.95);
+    }
+    
+    .collaborators-count {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .collaboration-loading::after {
+        background: rgba(10, 10, 31, 0.9);
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .collaboration-status,
+    .cursor-label,
+    .collaboration-action {
+        border-width: 2px;
+    }
+    
+    .status-dot {
+        border: 2px solid var(--text);
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .collaboration-status,
+    .collaborator-cursor,
+    .collaboration-action {
+        transition: none;
+        animation: none;
+    }
+    
+    .status-dot {
+        animation: none;
+    }
+    
+    .cursor-pointer {
+        animation: none;
+    }
+} 
