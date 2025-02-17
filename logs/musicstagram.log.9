@@ -1,0 +1,62 @@
+2025-02-01 02:21:30,963 INFO: Session before login: <SecureCookieSession {'_flashes': [('error', 'Having trouble loading the beats... Try again! 🎵')]}> [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:238]
+2025-02-01 02:21:49,669 INFO: New user registered: OZII [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:225]
+2025-02-01 02:21:49,849 INFO: Session before login: <SecureCookieSession {'_flashes': [('success', 'Welcome to the squad! Time to drop some heat! 🎵')]}> [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:238]
+2025-02-01 02:21:59,253 INFO: Session before login: <SecureCookieSession {}> [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:238]
+2025-02-01 02:21:59,437 INFO: 🎵 User OZII logged in successfully! [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:264]
+2025-02-01 02:21:59,437 INFO: Session after login: <SecureCookieSession {'_permanent': True, 'user_id': 3, 'username': 'OZII', 'last_activity': 1738365719.437097}> [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:265]
+2025-02-01 02:21:59,437 ERROR: Login error: 'SecureCookieSession' object has no attribute 'get_cookie' 😢 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:290]
+2025-02-01 02:21:59,442 INFO: Session before login: <SecureCookieSession {'_flashes': [('error', 'Something went wrong! Please try again. 😅')], '_permanent': True, 'last_activity': 1738365719.442847, 'user_id': 3, 'username': 'OZII'}> [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:238]
+2025-02-01 02:22:04,501 ERROR: Error loading profile: (sqlite3.OperationalError) no such column: post.bpm
+[SQL: SELECT post.id AS post_id, post.title AS post_title, post.description AS post_description, post.music_file AS post_music_file, post.timestamp AS post_timestamp, post.user_id AS post_user_id, post.play_count AS post_play_count, post.beat_data AS post_beat_data, post.bpm AS post_bpm, post.style AS post_style, post.effects_data AS post_effects_data, post.is_beat_pattern AS post_is_beat_pattern 
+FROM post 
+WHERE post.user_id = ? ORDER BY post.timestamp DESC]
+[parameters: (3,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:459]
+2025-02-01 02:22:04,513 INFO: Session in index: <SecureCookieSession {'_flashes': [('error', 'Profile not found or something went wrong! 😢')], '_permanent': True, 'last_activity': 1738365724.5132349, 'user_id': 3, 'username': 'OZII'}> [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:161]
+2025-02-01 02:22:04,514 ERROR: Error loading feed: (sqlite3.OperationalError) no such column: post.bpm
+[SQL: SELECT post.id AS post_id, post.title AS post_title, post.description AS post_description, post.music_file AS post_music_file, post.timestamp AS post_timestamp, post.user_id AS post_user_id, post.play_count AS post_play_count, post.beat_data AS post_beat_data, post.bpm AS post_bpm, post.style AS post_style, post.effects_data AS post_effects_data, post.is_beat_pattern AS post_is_beat_pattern 
+FROM post ORDER BY post.timestamp DESC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) 😢 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:177]
+2025-02-01 02:22:04,522 INFO: Session before login: <SecureCookieSession {'_flashes': [('error', 'Having trouble loading the beats... Try again! 🎵')]}> [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:238]
+2025-02-01 02:22:29,785 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:22:29,796 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:22:48,373 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:22:48,383 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:23:04,925 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:23:04,934 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:23:06,236 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:23:06,244 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:23:20,630 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:23:20,640 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:23:31,858 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:23:31,867 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:23:34,180 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:23:34,188 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:23:38,882 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:23:38,889 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:23:39,133 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:23:39,141 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:23:44,548 WARNING: 404 error: http://127.0.0.1:5001/favicon.ico [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:651]
+2025-02-01 02:23:47,121 INFO: 🎵 User OZII logged in successfully! [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:254]
+2025-02-01 02:23:47,133 ERROR: Error loading feed: (sqlite3.OperationalError) no such column: post.bpm
+[SQL: SELECT post.id AS post_id, post.title AS post_title, post.description AS post_description, post.music_file AS post_music_file, post.timestamp AS post_timestamp, post.user_id AS post_user_id, post.play_count AS post_play_count, post.beat_data AS post_beat_data, post.bpm AS post_bpm, post.style AS post_style, post.effects_data AS post_effects_data, post.is_beat_pattern AS post_is_beat_pattern 
+FROM post ORDER BY post.timestamp DESC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) 😢 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:174]
+2025-02-01 02:24:13,102 INFO: 🎵 User OZAI logged in successfully! [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:254]
+2025-02-01 02:24:13,418 ERROR: Error loading feed: (sqlite3.OperationalError) no such column: post.bpm
+[SQL: SELECT post.id AS post_id, post.title AS post_title, post.description AS post_description, post.music_file AS post_music_file, post.timestamp AS post_timestamp, post.user_id AS post_user_id, post.play_count AS post_play_count, post.beat_data AS post_beat_data, post.bpm AS post_bpm, post.style AS post_style, post.effects_data AS post_effects_data, post.is_beat_pattern AS post_is_beat_pattern 
+FROM post ORDER BY post.timestamp DESC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) 😢 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:174]
+2025-02-01 02:25:19,878 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:25:19,891 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:25:20,131 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:25:20,139 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:25:40,496 INFO: 🎵 User OZII logged in successfully! [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:254]
+2025-02-01 02:25:40,511 ERROR: Error loading feed: (sqlite3.OperationalError) no such column: post.bpm
+[SQL: SELECT post.id AS post_id, post.title AS post_title, post.description AS post_description, post.music_file AS post_music_file, post.timestamp AS post_timestamp, post.user_id AS post_user_id, post.play_count AS post_play_count, post.beat_data AS post_beat_data, post.bpm AS post_bpm, post.style AS post_style, post.effects_data AS post_effects_data, post.is_beat_pattern AS post_is_beat_pattern 
+FROM post ORDER BY post.timestamp DESC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) 😢 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:174]
+2025-02-01 02:28:23,039 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:28:23,053 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]
+2025-02-01 02:28:23,322 INFO: Musicstagram startup - Debug mode: True [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:56]
+2025-02-01 02:28:23,329 INFO: Database created and tables initialized 🎯 [in /Users/aihub/AI Empire HQ/Archived Chaos/emin_Draft/musicstagram.py:131]

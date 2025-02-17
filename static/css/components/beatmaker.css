@@ -1,0 +1,283 @@
+:root {
+    /* Futuristic Color Palette */
+    --primary: #00F5FF;
+    --primary-dark: #00C8FF;
+    --secondary: #FF00E5;
+    --accent: #7B61FF;
+    --background: #0A0A1F;
+    --surface: #1A1A2F;
+    --surface-light: #2A2A3F;
+    --text: #FFFFFF;
+    --text-secondary: #B0B0C0;
+    
+    /* Animations */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.2);
+    --shadow-lg: 0 8px 16px rgba(0,0,0,0.3);
+    --shadow-glow: 0 0 15px rgba(0, 245, 255, 0.5);
+}
+
+/* Modern Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--background);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Beat Maker Container */
+.beat-maker-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: var(--surface);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+    transition: var(--transition-normal);
+}
+
+.beat-maker-container:hover {
+    box-shadow: var(--shadow-glow);
+}
+
+/* Controls Section */
+.beat-maker-controls {
+    display: grid;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--surface-light);
+    border-radius: 0.75rem;
+}
+
+.transport-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Buttons */
+button {
+    background: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--primary);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+button:hover {
+    background: var(--primary);
+    color: var(--background);
+    box-shadow: var(--shadow-glow);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Grid Layout */
+.beat-grid {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    padding: 1rem;
+}
+
+.beat-row {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--surface-light);
+    border-radius: 0.5rem;
+}
+
+/* Beat Cells */
+.beat-cell {
+    aspect-ratio: 1;
+    background: var(--surface);
+    border: 2px solid var(--surface-light);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.beat-cell:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+}
+
+.beat-cell.active {
+    background: var(--primary);
+    border-color: var(--primary-dark);
+}
+
+.beat-cell.current {
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.beat-cell.beat-start {
+    border-left: 2px solid var(--secondary);
+}
+
+/* Track Controls */
+.track-controls {
+    display: grid;
+    gap: 1rem;
+}
+
+.track-control {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: var(--surface);
+    border-radius: 0.5rem;
+}
+
+/* Sliders */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--surface-light);
+    border-radius: 2px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: var(--primary-dark);
+    box-shadow: var(--shadow-glow);
+}
+
+/* Effects Panel */
+.effects-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--surface-light);
+    border-radius: 0.75rem;
+}
+
+.effect-control {
+    display: grid;
+    gap: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .beat-maker-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+    
+    .transport-controls {
+        flex-wrap: wrap;
+    }
+    
+    .track-control {
+        grid-template-columns: 1fr;
+    }
+    
+    .effects-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.playing .beat-cell.current {
+    animation: pulse var(--transition-normal) infinite;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Tooltips */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--primary);
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-fast);
+}
+
+[data-tooltip]:hover:before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+} 

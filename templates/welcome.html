@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Musicstagram 🎵{% endblock %}
+
+{% block extra_head %}
+<style>
+    .welcome-container {
+        padding: 4rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 40%),
+            radial-gradient(circle at 80% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 40%);
+        pointer-events: none;
+        animation: glow 10s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+        0% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .hero-section {
+        text-align: center;
+        padding: 6rem 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 30px;
+        margin-bottom: 6rem;
+        border: 1px solid rgba(0, 255, 255, 0.1);
+        box-shadow: var(--neon-box-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            45deg,
+            transparent,
+            rgba(0, 255, 255, 0.05),
+            transparent
+        );
+        transform: rotate(45deg);
+        animation: shine 6s linear infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: rotate(45deg) translateY(-100%); }
+        100% { transform: rotate(45deg) translateY(100%); }
+    }
+
+    .display-3 {
+        font-size: 4rem;
+        font-weight: 800;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: var(--neon-glow);
+        position: relative;
+        display: inline-block;
+    }
+
+    .display-3::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.5s ease;
+    }
+
+    .hero-section:hover .display-3::after {
+        transform: scaleX(1);
+        transform-origin: left;
+    }
+
+    .lead {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.5rem;
+        max-width: 800px;
+        margin: 0 auto 4rem;
+        line-height: 1.8;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn-cta {
+        padding: 1.2rem 2.5rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 15px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 0.5rem;
+    }
+
+    .btn-cta.primary {
+        background: var(--gradient-primary);
+        border: none;
+        color: #000;
+    }
+
+    .btn-cta.secondary {
+        background: transparent;
+        border: 2px solid var(--neon-primary);
+        color: #fff;
+    }
+
+    .btn-cta:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+    }
+
+    .btn-cta::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            45deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        transform: rotate(45deg);
+        transition: all 0.6s ease;
+    }
+
+    .btn-cta:hover::after {
+        transform: rotate(45deg) translate(50%, 50%);
+    }
+
+    .features {
+        margin-top: 6rem;
+    }
+
+    .feature-card {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        height: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(0, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            45deg,
+            transparent,
+            rgba(0, 255, 255, 0.05),
+            transparent
+        );
+        transform: translateY(100%);
+        transition: transform 0.6s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--neon-primary);
+        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+    }
+
+    .feature-card:hover::before {
+        transform: translateY(0);
+    }
+
+    .feature-card i {
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: var(--neon-glow);
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover i {
+        transform: scale(1.2) rotate(360deg);
+    }
+
+    .feature-card h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .feature-card p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    /* Floating animation for cards */
+    @keyframes float {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0); }
+    }
+
+    .feature-card:nth-child(1) { animation: float 6s ease-in-out infinite; }
+    .feature-card:nth-child(2) { animation: float 6s ease-in-out infinite 2s; }
+    .feature-card:nth-child(3) { animation: float 6s ease-in-out infinite 4s; }
+
+    /* Enhanced form styles */
+    .signup-form {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .form-floating {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-floating input {
+        height: 60px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(0, 255, 255, 0.1);
+        border-radius: 15px;
+        color: #fff;
+        font-size: 1.1rem;
+        padding: 1.5rem 1rem 0.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-floating input:focus {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: var(--neon-primary);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .form-floating label {
+        padding: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-floating input:focus + label {
+        color: var(--neon-primary);
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    }
+
+    .form-floating input::placeholder {
+        color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-container">
+    <div class="hero-section">
+        <h1 class="display-3">
+            <i class="fas fa-music"></i> Welcome to Musicstagram
+        </h1>
+        <p class="lead">
+            Create, share, and discover amazing beats with fellow musicians! Join our community of music creators and let your creativity flow.
+        </p>
+        
+        <form action="{{ url_for('signup') }}" method="GET" class="signup-form mb-4">
+            <div class="form-floating mb-3">
+                <input type="text" 
+                       class="form-control" 
+                       id="username" 
+                       name="username" 
+                       placeholder="Choose your stage name"
+                       autocomplete="username">
+                <label for="username">
+                    <i class="fas fa-user me-2"></i>Choose your stage name
+                </label>
+            </div>
+            
+            <div class="cta-buttons">
+                <button type="submit" class="btn btn-cta primary">
+                    <i class="fas fa-sign-in-alt me-2"></i> Start Creating
+                </button>
+                <a href="{{ url_for('login') }}" class="btn btn-cta secondary">
+                    <i class="fas fa-user me-2"></i> Already have an account?
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="features">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-drum"></i>
+                    <h3>Create Beats</h3>
+                    <p>Use our intuitive beat maker to create your next hit! Mix and match sounds, add effects, and craft the perfect rhythm.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-share-alt"></i>
+                    <h3>Share Music</h3>
+                    <p>Share your creations with the world! Get feedback from other musicians and build your following.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-users"></i>
+                    <h3>Connect</h3>
+                    <p>Connect with other musicians, collaborate on projects, and be part of a vibrant music community!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add ripple effect to buttons
+    document.querySelectorAll('.btn-cta').forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (this.tagName === 'A') {
+                e.preventDefault(); // Only prevent default for anchor tags
+            }
+            
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            this.appendChild(ripple);
+            
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size/2;
+            const y = e.clientY - rect.top - size/2;
+            
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            
+            if (this.tagName === 'A') {
+                // Navigate after ripple animation for anchor tags
+                const href = this.getAttribute('href');
+                setTimeout(() => {
+                    ripple.remove();
+                    window.location.href = href;
+                }, 300);
+            } else {
+                // Remove ripple after animation for buttons
+                setTimeout(() => ripple.remove(), 600);
+            }
+        });
+    });
+
+    // Handle form submission
+    const form = document.querySelector('.signup-form');
+    form.addEventListener('submit', function(e) {
+        const username = document.getElementById('username').value.trim();
+        if (!username) {
+            e.preventDefault();
+            const input = document.getElementById('username');
+            input.classList.add('is-invalid');
+            input.focus();
+            
+            // Add shake animation
+            input.style.animation = 'shake 0.5s';
+            setTimeout(() => input.style.animation = '', 500);
+        }
+    });
+
+    // Remove invalid state on input
+    const usernameInput = document.getElementById('username');
+    usernameInput.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+});
+
+// Add shake animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+    
+    .is-invalid {
+        border-color: var(--neon-secondary) !important;
+        animation: shake 0.5s;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 

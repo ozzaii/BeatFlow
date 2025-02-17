@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-guitar"></i> Join the Band!
+            </h2>
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user"></i> Stage Name
+                        </label>
+                        <input type="text" class="form-control bg-dark text-light" id="username" name="username" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope"></i> Email
+                        </label>
+                        <input type="email" class="form-control bg-dark text-light" id="email" name="email" required>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="instrument" class="form-label">
+                            <i class="fas fa-drum"></i> Main Instrument
+                        </label>
+                        <select class="form-select bg-dark text-light" id="instrument" name="instrument">
+                            <option value="vocals">Vocals</option>
+                            <option value="guitar">Guitar</option>
+                            <option value="bass">Bass</option>
+                            <option value="drums">Drums</option>
+                            <option value="keys">Keys</option>
+                            <option value="producer">Producer</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="genre" class="form-label">
+                            <i class="fas fa-music"></i> Main Genre
+                        </label>
+                        <select class="form-select bg-dark text-light" id="genre" name="genre">
+                            <option value="rock">Rock</option>
+                            <option value="hiphop">Hip Hop</option>
+                            <option value="electronic">Electronic</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="pop">Pop</option>
+                            <option value="metal">Metal</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="bio" class="form-label">
+                        <i class="fas fa-pen"></i> Bio
+                    </label>
+                    <textarea class="form-control bg-dark text-light" id="bio" name="bio" rows="3" 
+                              placeholder="Tell us about your musical journey..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" class="form-control bg-dark text-light" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-plus"></i> Start Your Journey!
+                </button>
+            </form>
+            <p class="text-center mt-3">
+                Already in the band? <a href="{{ url_for('login') }}" class="text-info">Login here!</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %} 

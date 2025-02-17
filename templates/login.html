@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Login 🎵{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="login-card">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <div class="logo-container mb-4">
+                            <i class="fas fa-music fa-3x neon-text"></i>
+                        </div>
+                        <h2 class="display-5 fw-bold mb-3 neon-text">Welcome Back!</h2>
+                        <p class="lead text-muted">Time to drop some beats 🎵</p>
+                    </div>
+                    
+                    <form method="POST" id="loginForm" class="needs-validation" novalidate>
+                        <div class="form-floating mb-4">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   placeholder="Username"
+                                   required
+                                   autocomplete="username"
+                                   data-lpignore="true">
+                            <label for="username">
+                                <i class="fas fa-user me-2"></i>Username
+                            </label>
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-circle me-2"></i>Please enter your username
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating mb-4">
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Password"
+                                   required
+                                   autocomplete="current-password"
+                                   data-lpignore="true">
+                            <label for="password">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </label>
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-circle me-2"></i>Please enter your password
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-cta primary">
+                                <i class="fas fa-sign-in-alt me-2"></i> Let's Make Music!
+                            </button>
+                            <a href="{{ url_for('signup') }}" class="btn btn-cta secondary">
+                                <i class="fas fa-user-plus me-2"></i> New Here? Sign Up!
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-container {
+    padding: 4rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 40%);
+    pointer-events: none;
+    animation: glow 10s ease-in-out infinite alternate;
+}
+
+.login-card {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(0, 255, 255, 0.1);
+    box-shadow: var(--neon-box-shadow);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.login-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent,
+        rgba(0, 255, 255, 0.05),
+        transparent
+    );
+    transform: rotate(45deg);
+    animation: shine 6s linear infinite;
+}
+
+.logo-container {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(0, 255, 255, 0.1);
+    box-shadow: var(--neon-glow);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.form-floating {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form-floating label {
+    padding: 1rem !important;
+    color: rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+}
+
+.form-floating > .form-control {
+    height: 60px;
+    line-height: 1.25;
+    padding: 1rem 1rem;
+}
+
+.form-control {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: var(--neon-primary);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+    color: #fff;
+}
+
+.form-control:focus + label {
+    color: var(--neon-primary);
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+.invalid-feedback {
+    font-size: 0.85rem;
+    color: var(--neon-secondary);
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.btn-cta {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-cta.primary {
+    background: var(--gradient-primary);
+    border: none;
+    color: #000;
+}
+
+.btn-cta.secondary {
+    background: transparent;
+    border: 2px solid var(--neon-primary);
+    color: #fff;
+}
+
+.btn-cta:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+}
+
+.btn-cta::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transform: rotate(45deg);
+    transition: all 0.6s ease;
+}
+
+.btn-cta:hover::after {
+    transform: rotate(45deg) translate(50%, 50%);
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.65s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Password toggle button */
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    z-index: 5;
+    transition: all 0.3s ease;
+}
+
+.password-toggle:hover {
+    color: var(--neon-primary);
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+/* Ripple effect */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    
+    // Form validation with shake effect
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            form.classList.add('shake');
+            setTimeout(() => form.classList.remove('shake'), 650);
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Password visibility toggle
+    const passwordInput = document.getElementById('password');
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'password-toggle';
+    toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+    
+    passwordInput.parentElement.appendChild(toggleBtn);
+    
+    toggleBtn.addEventListener('click', function() {
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        this.innerHTML = `<i class="fas fa-eye${type === 'password' ? '' : '-slash'}"></i>`;
+        
+        // Add ripple effect
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        this.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+    });
+    
+    // Add ripple effect to buttons
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            this.appendChild(ripple);
+            
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size/2;
+            const y = e.clientY - rect.top - size/2;
+            
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            
+            setTimeout(() => ripple.remove(), 600);
+        });
+    });
+});
+</script>
+{% endblock %} 

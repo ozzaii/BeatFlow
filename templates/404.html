@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-5">
+                <h1 class="display-1">
+                    <i class="fas fa-record-vinyl fa-spin"></i>
+                </h1>
+                <h2 class="mb-4">404 - Track Not Found</h2>
+                <p class="lead mb-4">Looks like this track skipped a beat! The page you're looking for doesn't exist.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-home"></i> Back to the Main Stage
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

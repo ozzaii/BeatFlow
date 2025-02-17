@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Feed{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        {% for post in posts %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <a href="{{ url_for('profile', username=post.author.username) }}" 
+                       class="text-decoration-none text-light">
+                        <i class="fas fa-user-circle fa-2x me-2"></i>
+                        <div>
+                            <h5 class="mb-0">{{ post.author.username }}</h5>
+                            <small class="text-muted">
+                                <i class="fas fa-{{ 'guitar' if post.author.instrument == 'guitar' 
+                                                  else 'microphone' if post.author.instrument == 'vocals'
+                                                  else 'drum' if post.author.instrument == 'drums'
+                                                  else 'music' }}"></i>
+                                {{ post.author.instrument.title() }} |
+                                <i class="fas fa-compact-disc"></i> {{ post.author.genre.title() }}
+                            </small>
+                        </div>
+                    </a>
+                </div>
+
+                <h4>{{ post.title }}</h4>
+                <p>{{ post.description }}</p>
+
+                <div class="audio-player mb-3" id="waveform-{{ post.id }}"></div>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-sm btn-outline-light play-btn me-2" data-post-id="{{ post.id }}">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <div class="ms-2">
+                        <i class="fas fa-headphones"></i>
+                        <span class="play-count" data-post-id="{{ post.id }}">
+                            {{ post.play_count }}
+                        </span> plays
+                    </div>
+                </div>
+
+                <div class="mt-3 d-flex justify-content-between align-items-center">
+                    <form action="{{ url_for('like_post', post_id=post.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-link text-light p-0">
+                            <i class="fas fa-heart{{ ' text-danger' if post.likes|length > 0 }}"></i>
+                            {{ post.likes|length }}
+                        </button>
+                    </form>
+                    <small class="text-muted">
+                        {{ post.timestamp.strftime('%B %d, %Y %I:%M %p') }}
+                    </small>
+                </div>
+
+                <div class="mt-3">
+                    <form class="comment-form" data-post-id="{{ post.id }}">
+                        <div class="input-group">
+                            <input type="text" class="form-control bg-dark text-light" 
+                                   placeholder="Drop a comment..." name="content">
+                            <button class="btn btn-outline-light" type="submit">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="comments-section mt-3" id="comments-{{ post.id }}">
+                        {% for comment in post.comments %}
+                        <div class="comment mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i> 
+                                <a href="{{ url_for('profile', username=comment.author.username) }}"
+                                   class="text-light text-decoration-none">
+                                    {{ comment.author.username }}
+                                </a>
+                                <i class="fas fa-{{ 'guitar' if comment.author.instrument == 'guitar' 
+                                                  else 'microphone' if comment.author.instrument == 'vocals'
+                                                  else 'drum' if comment.author.instrument == 'drums'
+                                                  else 'music' }}"></i>
+                            </small>
+                            <p class="mb-1">{{ comment.content }}</p>
+                            <small class="text-muted">{{ comment.timestamp.strftime('%B %d, %Y %I:%M %p') }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center">
+            <h3>No tracks dropped yet! 😢</h3>
+            <p>Be the first to share your music!</p>
+            <a href="{{ url_for('new_post') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Drop a Track
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const players = {};
+    
+    document.querySelectorAll('.audio-player').forEach(container => {
+        const postId = container.id.split('-')[1];
+        const wavesurfer = WaveSurfer.create({
+            container: container,
+            waveColor: '#ff6b6b',
+            progressColor: '#ff8e53',
+            cursorColor: '#fff',
+            barWidth: 2,
+            barRadius: 3,
+            responsive: true,
+            height: 100,
+            barGap: 3
+        });
+        
+        wavesurfer.load(`/static/uploads/${postId}`);
+        players[postId] = wavesurfer;
+        
+        const playBtn = document.querySelector(`.play-btn[data-post-id="${postId}"]`);
+        playBtn.addEventListener('click', function() {
+            // Stop all other players
+            Object.values(players).forEach(player => {
+                if (player !== wavesurfer && player.isPlaying()) {
+                    player.pause();
+                    const btn = document.querySelector(`.play-btn[data-post-id="${Object.keys(players).find(key => players[key] === player)}"]`);
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+            
+            if (wavesurfer.isPlaying()) {
+                wavesurfer.pause();
+                this.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                wavesurfer.play();
+                this.innerHTML = '<i class="fas fa-pause"></i>';
+                // Track play count
+                fetch(`/post/${postId}/play`, {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        document.querySelector(`.play-count[data-post-id="${postId}"]`)
+                            .textContent = data.play_count;
+                    });
+            }
+        });
+        
+        wavesurfer.on('finish', function() {
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+    });
+    
+    // Handle Comments
+    document.querySelectorAll('.comment-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const postId = this.dataset.postId;
+            const content = this.querySelector('input[name="content"]').value;
+            
+            fetch(`/post/${postId}/comment`, {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const commentHtml = `
+                    <div class="comment mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> 
+                            <a href="/user/${data.author}" class="text-light text-decoration-none">
+                                ${data.author}
+                            </a>
+                            <i class="fas fa-${data.author_instrument === 'guitar' ? 'guitar' : 
+                                              data.author_instrument === 'vocals' ? 'microphone' :
+                                              data.author_instrument === 'drums' ? 'drum' : 'music'}"></i>
+                        </small>
+                        <p class="mb-1">${data.content}</p>
+                        <small class="text-muted">${data.timestamp}</small>
+                    </div>
+                `;
+                document.querySelector(`#comments-${postId}`).insertAdjacentHTML('afterbegin', commentHtml);
+                this.reset();
+            });
+        });
+    });
+});
+</script>
+{% endblock %} 

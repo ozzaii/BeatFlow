@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header glass-container mb-5">
+        <div class="profile-cover"></div>
+        <div class="profile-info text-center">
+            <div class="profile-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h1 class="display-4 fw-bold neon-text mb-2">{{ user.username }}</h1>
+            <div class="profile-badges mb-3">
+                <span class="badge bg-glow">
+                    <i class="fas fa-{{ 'guitar' if user.instrument == 'guitar' 
+                                      else 'microphone' if user.instrument == 'vocals'
+                                      else 'drum' if user.instrument == 'drums'
+                                      else 'music' }}"></i>
+                    {{ user.instrument.title() }}
+                </span>
+                <span class="badge bg-glow">
+                    <i class="fas fa-compact-disc"></i> 
+                    {{ user.genre.title() }}
+                </span>
+            </div>
+            
+            {% if user.bio %}
+                <p class="lead text-muted mb-4">{{ user.bio }}</p>
+            {% endif %}
+            
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <div class="stat-value neon-text">{{ user.posts|length }}</div>
+                    <div class="stat-label">Tracks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value neon-text">{{ user.following.count() }}</div>
+                    <div class="stat-label">Following</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value neon-text">{{ user.followers.count() }}</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+            </div>
+            
+            {% if user.id != session.get('user_id') %}
+                <button class="btn btn-cta follow-btn mt-4" data-username="{{ user.username }}" 
+                        data-following="{{ 'true' if is_following else 'false' }}">
+                    <i class="fas fa-{{ 'user-minus' if is_following else 'user-plus' }} me-2"></i>
+                    {{ 'Unfollow' if is_following else 'Follow' }}
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Content Tabs -->
+    <div class="content-tabs glass-container">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#beats" type="button">
+                    <i class="fas fa-drum me-2"></i>Beat Patterns
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tracks" type="button">
+                    <i class="fas fa-music me-2"></i>Tracks
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content p-4">
+            <!-- Beat Patterns Tab -->
+            <div class="tab-pane fade show active" id="beats">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="neon-text mb-0">
+                        <i class="fas fa-drum"></i> Beat Patterns
+                    </h3>
+                    {% if user.id == session.get('user_id') %}
+                        <a href="{{ url_for('synth') }}" class="btn btn-cta">
+                            <i class="fas fa-plus me-2"></i>Create Beat
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <div class="beats-grid">
+                    {% for post in posts %}
+                        {% if post.is_beat_pattern %}
+                        <div class="beat-card glass-container">
+                            <div class="beat-header">
+                                <h4 class="neon-text">{{ post.title }}</h4>
+                                <div class="beat-meta">
+                                    <span class="badge bg-glow">{{ post.bpm }} BPM</span>
+                                    <span class="badge bg-glow">{{ post.style }}</span>
+                                </div>
+                            </div>
+                            
+                            <p class="beat-description">{{ post.description }}</p>
+                            
+                            <div class="beat-actions">
+                                <a href="{{ url_for('synth', beat_id=post.id) }}" class="btn btn-cta">
+                                    <i class="fas fa-edit me-2"></i>Edit
+                                </a>
+                                <button class="btn btn-cta play-beat" data-beat-id="{{ post.id }}">
+                                    <i class="fas fa-play me-2"></i>Play
+                                </button>
+                            </div>
+                            
+                            <div class="beat-stats">
+                                <span><i class="fas fa-play"></i> {{ post.play_count }}</span>
+                                <span><i class="fas fa-heart"></i> {{ post.likes|length }}</span>
+                                <span><i class="fas fa-comment"></i> {{ post.comments|length }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Tracks Tab -->
+            <div class="tab-pane fade" id="tracks">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="neon-text mb-0">
+                        <i class="fas fa-music"></i> Tracks
+                    </h3>
+                    {% if user.id == session.get('user_id') %}
+                        <a href="{{ url_for('new_post') }}" class="btn btn-cta">
+                            <i class="fas fa-plus me-2"></i>Upload Track
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <div class="tracks-grid">
+                    {% for post in posts %}
+                        {% if not post.is_beat_pattern %}
+                        <div class="track-card glass-container">
+                            <div class="track-header">
+                                <h4 class="neon-text">{{ post.title }}</h4>
+                                <p class="track-description">{{ post.description }}</p>
+                            </div>
+                            
+                            <div class="track-waveform" id="waveform-{{ post.id }}"></div>
+                            
+                            <div class="track-controls">
+                                <button class="btn btn-cta play-btn" data-post-id="{{ post.id }}">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <div class="track-stats">
+                                    <span><i class="fas fa-play"></i> {{ post.play_count }}</span>
+                                    <span><i class="fas fa-heart"></i> {{ post.likes|length }}</span>
+                                    <span><i class="fas fa-comment"></i> {{ post.comments|length }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.profile-header {
+    position: relative;
+    padding: 0;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+.profile-cover {
+    height: 200px;
+    background: linear-gradient(45deg, 
+        rgba(0, 255, 255, 0.1), 
+        rgba(255, 0, 255, 0.1), 
+        rgba(255, 145, 0, 0.1));
+    position: relative;
+}
+
+.profile-cover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.8));
+}
+
+.profile-info {
+    padding: 2rem;
+    position: relative;
+    margin-top: -100px;
+}
+
+.profile-avatar {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--neon-primary);
+    box-shadow: var(--neon-glow);
+}
+
+.profile-avatar i {
+    font-size: 80px;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.profile-badges {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.badge.bg-glow {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--neon-primary);
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    box-shadow: var(--neon-glow);
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    border: 1px solid rgba(0, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--neon-primary);
+    box-shadow: var(--neon-glow);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-cta {
+    background: var(--gradient-primary);
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-cta:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: var(--neon-glow);
+}
+
+.content-tabs {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.nav-tabs {
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+    padding: 1rem 1rem 0;
+}
+
+.nav-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px 12px 0 0;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #fff;
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.nav-tabs .nav-link.active {
+    background: var(--gradient-primary);
+    color: #000;
+    font-weight: bold;
+}
+
+.beats-grid, .tracks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.beat-card, .track-card {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.beat-card:hover, .track-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--neon-primary);
+    box-shadow: var(--neon-glow);
+}
+
+.beat-header, .track-header {
+    margin-bottom: 1rem;
+}
+
+.beat-meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.beat-description, .track-description {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.beat-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.beat-stats, .track-stats {
+    display: flex;
+    gap: 1.5rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+}
+
+.track-waveform {
+    height: 80px;
+    margin: 1rem 0;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.track-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+@keyframes glow {
+    0% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
+    100% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize WaveSurfer instances
+    const players = {};
+    document.querySelectorAll('.track-waveform').forEach(container => {
+        const postId = container.id.split('-')[1];
+        const wavesurfer = WaveSurfer.create({
+            container: container,
+            waveColor: '#ff6b6b',
+            progressColor: '#ff8e53',
+            cursorColor: '#fff',
+            barWidth: 2,
+            barRadius: 3,
+            responsive: true,
+            height: 80,
+            barGap: 3
+        });
+        
+        wavesurfer.load(`/static/uploads/${postId}`);
+        players[postId] = wavesurfer;
+        
+        const playBtn = document.querySelector(`.play-btn[data-post-id="${postId}"]`);
+        playBtn.addEventListener('click', function() {
+            // Stop all other players
+            Object.values(players).forEach(player => {
+                if (player !== wavesurfer && player.isPlaying()) {
+                    player.pause();
+                    const btn = document.querySelector(`.play-btn[data-post-id="${Object.keys(players).find(key => players[key] === player)}"]`);
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+            
+            if (wavesurfer.isPlaying()) {
+                wavesurfer.pause();
+                this.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                wavesurfer.play();
+                this.innerHTML = '<i class="fas fa-pause"></i>';
+                // Track play count
+                fetch(`/post/${postId}/play`, {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        const playCount = document.querySelector(`.track-stats [data-post-id="${postId}"]`);
+                        if (playCount) playCount.textContent = data.play_count;
+                    });
+            }
+        });
+        
+        wavesurfer.on('finish', function() {
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+    });
+    
+    // Handle Follow/Unfollow with animation
+    const followBtn = document.querySelector('.follow-btn');
+    if (followBtn) {
+        followBtn.addEventListener('click', async () => {
+            const username = followBtn.dataset.username;
+            const isFollowing = followBtn.dataset.following === 'true';
+            
+            try {
+                followBtn.disabled = true;
+                followBtn.classList.add('loading');
+                
+                const response = await fetch(`/follow/${username}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.status) {
+                    followBtn.innerHTML = `<i class="fas fa-${isFollowing ? 'user-plus' : 'user-minus'} me-2"></i>${isFollowing ? 'Follow' : 'Unfollow'}`;
+                    followBtn.dataset.following = isFollowing ? 'false' : 'true';
+                    location.reload(); // Refresh to update stats
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to update follow status', 'error');
+            } finally {
+                followBtn.disabled = false;
+                followBtn.classList.remove('loading');
+            }
+        });
+    }
+    
+    // Handle beat playback
+    document.querySelectorAll('.play-beat').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const beatId = btn.dataset.beatId;
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+                
+                const response = await fetch(`/post/${beatId}/play`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    window.location.href = `/synth/${beatId}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to load beat', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-play me-2"></i>Play';
+            }
+        });
+    });
+});
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast show ${type}`;
+    toast.innerHTML = `
+        <div class="toast-body">
+            ${message}
+            <button type="button" class="btn-close ms-2" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %} 
