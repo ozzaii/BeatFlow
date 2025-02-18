@@ -10,42 +10,47 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      loadUser()
-    } else {
+    const initAuth = async () => {
+      const token = localStorage.getItem('token')
+      if (token) {
+        try {
+          const response = await userApi.getProfile()
+          setUser(response.data.user)
+        } catch (error) {
+          console.error('Error loading user:', error)
+          localStorage.removeItem('token')
+        }
+      }
       setLoading(false)
     }
+
+    initAuth()
   }, [])
 
-  const loadUser = async () => {
-    try {
-      const response = await userApi.getProfile()
-      setUser(response.data.user)
-    } catch (error) {
-      console.error('Error loading user:', error)
-      localStorage.removeItem('token')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const login = async (credentials) => {
-    const response = await userApi.login(credentials)
-    const { token, user } = response.data
-    localStorage.setItem('token', token)
-    setUser(user)
-    navigate('/')
-    return user
+    try {
+      const response = await userApi.login(credentials)
+      const { token, user } = response.data
+      localStorage.setItem('token', token)
+      setUser(user)
+      navigate('/')
+      return user
+    } catch (error) {
+      throw error
+    }
   }
 
   const register = async (userData) => {
-    const response = await userApi.register(userData)
-    const { token, user } = response.data
-    localStorage.setItem('token', token)
-    setUser(user)
-    navigate('/')
-    return user
+    try {
+      const response = await userApi.register(userData)
+      const { token, user } = response.data
+      localStorage.setItem('token', token)
+      setUser(user)
+      navigate('/')
+      return user
+    } catch (error) {
+      throw error
+    }
   }
 
   const logout = () => {
@@ -55,9 +60,13 @@ export const AuthProvider = ({ children }) => {
   }
 
   const updateProfile = async (profileData) => {
-    const response = await userApi.updateProfile(profileData)
-    setUser(response.data)
-    return response.data
+    try {
+      const response = await userApi.updateProfile(profileData)
+      setUser(response.data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 
   const value = {
@@ -69,9 +78,13 @@ export const AuthProvider = ({ children }) => {
     updateProfile
   }
 
+  if (loading) {
+    return null // or return a loading spinner
+  }
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   )
 }
