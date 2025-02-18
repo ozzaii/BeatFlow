@@ -2,9 +2,9 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ gh-pages, main ]
   pull_request:
-    branches: [ main ]
+    branches: [ gh-pages, main ]
   workflow_dispatch:
 
 jobs:
@@ -12,69 +12,31 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
-      GITHUB_PAGES_URL: ${{ secrets.GITHUB_PAGES_URL }}
+      VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_KEY }}
     
     steps:
-      - uses: actions/checkout@v2
-      
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          python-version: '3.9'
+          node-version: '18'
+          cache: 'npm'
           
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+        
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          node-version: '16'
-          
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
-      - name: Install Node.js dependencies
-        run: |
-          npm install -g sass
-          npm install -g uglify-js
-          npm install -g clean-css-cli
-          
-      - name: Run tests
-        run: |
-          python -m pytest tests/
-          
-      - name: Build static assets
-        run: |
-          # Compile SASS
-          sass static/scss:static/css --style compressed
-          
-          # Minify JavaScript
-          for file in static/js/components/*.js; do
-            uglifyjs "$file" -o "${file%.js}.min.js"
-          done
-          
-          # Minify CSS
-          for file in static/css/components/*.css; do
-            cleancss -o "${file%.css}.min.css" "$file"
-          done
-          
-      - name: Generate service worker
-        run: |
-          python scripts/generate_sw.py
-          
-      - name: Build application
-        run: |
-          python scripts/build.py
-          
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/main'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          cname: beatflow.app
+          folder: dist
+          branch: gh-pages-deploy # The branch the action should deploy to
+          clean: true # Automatically remove deleted files from the deployment branch
           
       - name: Update environment variables
         run: |
