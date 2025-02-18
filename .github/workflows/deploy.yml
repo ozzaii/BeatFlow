@@ -57,25 +57,4 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Update environment variables
-        run: |
-          # Create .env file
-          echo "FLASK_APP=musicstagram.py" > .env
-          echo "FLASK_ENV=production" >> .env
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
-          echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> .env
-          echo "SUPABASE_JWT_SECRET=${{ secrets.SUPABASE_JWT_SECRET }}" >> .env
-          echo "GITHUB_PAGES_URL=${{ secrets.GITHUB_PAGES_URL }}" >> .env
-          echo "MAX_UPLOAD_SIZE=50MB" >> .env
-          
-      - name: Notify deployment status
-        if: always()
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_TITLE: "BeatFlow Deployment"
-          SLACK_MESSAGE: "Deployment ${{ job.status }}" 
+        uses: actions/deploy-pages@v4 
