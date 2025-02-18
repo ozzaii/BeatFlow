@@ -1,188 +1,149 @@
-# BeatFlow 🎵
+# BeatFlow - EDM Sound Sharing Platform 🎵
 
-A modern, collaborative beat-making platform with real-time collaboration, offline support, and a beautiful UI.
+BeatFlow is a modern, social platform for creating and sharing EDM beats. With a futuristic cyberpunk interface and powerful beat-making capabilities, it's the perfect place for both beginners and experienced producers to create, share, and discover electronic music.
 
-![BeatFlow Screenshot](static/img/screenshot1.png)
+## ✨ Features
 
-## Features ✨
+### Beat Creation
+- 64-step beat sequencer with multiple tracks:
+  - Kick drum
+  - Snare/Clap
+  - Hi-hats
+  - Synth
+- Real-time playback with Tone.js
+- Adjustable BPM (60-180)
+- Pattern randomization
+- Save and load beats
 
-- **Real-time Collaboration**
-  - Live beat creation with multiple users
-  - Cursor tracking and presence indicators
-  - Chat system for communication
-  - Version control for beats
+### Social Features
+- Share your beats with the community
+- Like and comment on beats
+- Follow other creators
+- User profiles
+- Genre-based discovery
+- Real-time updates with Socket.IO
 
-- **Modern Beat Creation**
-  - Intuitive pattern sequencer
-  - High-quality audio samples
-  - Effect chain with reverb, delay, and filters
-  - Real-time audio processing
+### Modern UI/UX
+- Cyberpunk-inspired design
+- Responsive interface
+- Dark mode
+- Interactive animations
+- Beat visualization
 
-- **Progressive Web App**
-  - Works offline
-  - Background sync
-  - Push notifications
-  - Installable on any device
-
-- **Beautiful UI**
-  - Glass morphism design
-  - Smooth animations
-  - Responsive layout
-  - Dark mode support
-
-## Tech Stack 🛠️
-
-- **Frontend**
-  - HTML5 with modern CSS features
-  - Vanilla JavaScript with modern APIs
-  - Web Audio API for sound processing
-  - Service Workers for offline support
-
-- **Backend**
-  - Flask for the web server
-  - Supabase for real-time database
-  - WebSocket for real-time communication
-  - PostgreSQL for data storage
-
-- **Infrastructure**
-  - GitHub Pages for hosting
-  - GitHub Actions for CI/CD
-  - Supabase for backend services
-  - CloudFlare for CDN
-
-## Getting Started 🚀
+## 🚀 Getting Started
 
 ### Prerequisites
-
-- Python 3.9 or higher
-- Node.js 16 or higher
-- A Supabase account
+- Node.js (v14 or higher)
+- MongoDB
+- pnpm (recommended) or npm
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-   git clone https://github.com/yourusername/beatflow.git
-   cd beatflow
+git clone https://github.com/yourusername/beatflow.git
+cd beatflow
 ```
 
-2. Create and activate a virtual environment:
+2. Install dependencies:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Install frontend dependencies
+cd frontend
+pnpm install
+
+# Install backend dependencies
+cd ../backend
+pnpm install
 ```
 
-3. Install dependencies:
+3. Set up environment variables:
 ```bash
-pip install -r requirements.txt
-   npm install -g sass uglify-js clean-css-cli
+# Backend (.env)
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/beatflow
+JWT_SECRET=your-super-secret-jwt-key
+FRONTEND_URL=http://localhost:5173
+
+# Frontend (.env)
+VITE_API_URL=http://localhost:3000/api
+VITE_SOCKET_URL=http://localhost:3000
 ```
 
-4. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Supabase credentials
-   ```
-
-5. Initialize the database:
-   ```bash
-   flask db upgrade
-   ```
-
-6. Run the development server:
-   ```bash
-   flask run
-   ```
-
-Visit `http://localhost:5000` to see the app running.
-
-## Deployment 🌐
-
-### GitHub Pages
-
-1. Fork this repository
-
-2. Set up GitHub secrets:
-   - `SUPABASE_URL`
-   - `SUPABASE_KEY`
-   - `SUPABASE_JWT_SECRET`
-   - `GITHUB_PAGES_URL`
-
-3. Enable GitHub Pages in repository settings
-
-4. Push to main branch to trigger deployment
-
-### Custom Domain
-
-1. Add your domain in repository settings
-
-2. Create CNAME record pointing to `yourusername.github.io`
-
-3. Update `GITHUB_PAGES_URL` in GitHub secrets
-
-## Development 👩‍💻
-
-### File Structure
-
-```
-beatflow/
-├── static/
-│   ├── css/
-│   ├── js/
-│   ├── img/
-│   └── fonts/
-├── templates/
-├── migrations/
-├── scripts/
-├── tests/
-└── config/
-```
-
-### Running Tests
-
+4. Start the development servers:
 ```bash
-python -m pytest tests/
+# Start backend
+cd backend
+pnpm dev
+
+# Start frontend (in a new terminal)
+cd frontend
+pnpm dev
 ```
 
-### Building Assets
+5. Open your browser and navigate to `http://localhost:5173`
 
-```bash
-python scripts/build.py
-```
+## 🛠️ Tech Stack
 
-## Contributing 🤝
+### Frontend
+- React with Vite
+- Chakra UI
+- Tone.js for audio synthesis
+- Socket.IO client
+- Framer Motion for animations
+- Axios for API calls
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Backend
+- Express.js
+- MongoDB with Mongoose
+- Socket.IO
+- JWT authentication
+- Multer for file uploads
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct.
+## 🎨 Design
 
-## License 📝
+The UI follows a cyberpunk aesthetic with:
+- Neon accents
+- Dark backgrounds
+- Glowing elements
+- Futuristic animations
+- Responsive grid layouts
+
+## 📱 Responsive Design
+
+BeatFlow is fully responsive and works on:
+- Desktop browsers
+- Tablets
+- Mobile devices
+
+## 🔒 Security
+
+- JWT-based authentication
+- Secure password hashing
+- Protected API endpoints
+- File upload validation
+- Rate limiting
+
+## 🚀 Deployment
+
+The application is configured for deployment on:
+- Frontend: GitHub Pages
+- Backend: Any Node.js hosting (Heroku, DigitalOcean, etc.)
+- Database: MongoDB Atlas
+
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments 🙏
+## 🤝 Contributing
 
-- [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
-- [Supabase](https://supabase.io/)
-- [Flask](https://flask.palletsprojects.com/)
-- [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## Support 💬
+## 🙏 Acknowledgments
 
-For support, email support@beatflow.app or join our Discord server.
-
-## Roadmap 🗺️
-
-- [ ] Mobile app using React Native
-- [ ] AI-powered beat suggestions
-- [ ] Advanced audio effects
-- [ ] Social features
-- [ ] Marketplace for beats
-
----
-
-Made with ❤️ by the BeatFlow team 
+- [Tone.js](https://tonejs.github.io/) for audio synthesis
+- [Chakra UI](https://chakra-ui.com/) for the component library
+- [Socket.IO](https://socket.io/) for real-time features 

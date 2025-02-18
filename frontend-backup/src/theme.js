@@ -20,6 +20,11 @@ const colors = {
   },
 }
 
+const fonts = {
+  heading: 'Inter, system-ui, sans-serif',
+  body: 'Inter, system-ui, sans-serif',
+}
+
 const styles = {
   global: (props) => ({
     body: {
@@ -29,6 +34,29 @@ const styles = {
   }),
 }
 
-const theme = extendTheme({ config, colors, styles })
+const components = {
+  Button: {
+    defaultProps: {
+      colorScheme: 'brand',
+    },
+    variants: {
+      solid: (props) => ({
+        bg: props.colorMode === 'dark' ? 'brand.500' : 'brand.400',
+        color: 'gray.900',
+        _hover: {
+          bg: props.colorMode === 'dark' ? 'brand.400' : 'brand.500',
+        },
+      }),
+    },
+  },
+}
+
+const theme = extendTheme({ 
+  config, 
+  colors, 
+  fonts, 
+  styles, 
+  components,
+})
 
 export default theme 
