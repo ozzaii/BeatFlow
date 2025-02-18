@@ -26,14 +26,16 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: true,
     rollupOptions: {
-      external: ['axios', 'socket.io-client'],
       output: {
-        manualChunks: {
-          'tone': ['tone'],
-          'chakra': ['@chakra-ui/react', '@emotion/react', '@emotion/styled'],
-          'vendor': ['react', 'react-dom', 'react-router-dom'],
-        },
-      },
-    },
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('tone')) return 'tone'
+            if (id.includes('@chakra-ui') || id.includes('@emotion')) return 'chakra'
+            if (id.includes('react')) return 'vendor'
+            return 'vendor'
+          }
+        }
+      }
+    }
   },
 })
