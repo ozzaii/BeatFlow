@@ -26,6 +26,7 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: true,
     rollupOptions: {
+      external: ['axios', 'socket.io-client'],
       output: {
         manualChunks: {
           'tone': ['tone'],
