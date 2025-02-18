@@ -19,7 +19,7 @@ import {
 import { useState, useEffect } from 'react'
 import { FaHeart, FaComment, FaPlay, FaStop, FaUser } from 'react-icons/fa'
 import { beatApi, userApi } from '../services/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../hooks/useAuth.jsx'
 import { Link as RouterLink } from 'react-router-dom'
 
 const BeatFeed = () => {

@@ -32,7 +32,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { FaPlay, FaStop, FaRandom, FaTrash, FaShare, FaSave, FaDownload, FaHeart, FaComment } from 'react-icons/fa'
 import * as Tone from 'tone'
 import { beatApi } from '../services/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 const TOTAL_STEPS = 64
 const DEFAULT_BPM = 128
