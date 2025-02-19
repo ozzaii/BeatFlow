@@ -1,0 +1,44 @@
+# BeatFlow - Next-gen social beat making platform
+# https://beatflow.app
+
+User-agent: *
+Allow: /
+Allow: /studio/
+Allow: /battle/
+Allow: /profile/
+Allow: /discover/
+Allow: /feed/
+Allow: /trending/
+Allow: /charts/
+Allow: /competitions/
+
+# Disallow private and auth pages
+Disallow: /settings/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /internal/
+
+# Disallow temp and draft content
+Disallow: /drafts/
+Disallow: /temp/
+Disallow: /*.tmp$
+
+# Crawl delays for different bots
+User-agent: Googlebot
+Crawl-delay: 1
+
+User-agent: Bingbot
+Crawl-delay: 2
+
+User-agent: DuckDuckBot
+Crawl-delay: 2
+
+# Sitemap locations
+Sitemap: https://beatflow.app/sitemap.xml
+Sitemap: https://beatflow.app/beats-sitemap.xml
+Sitemap: https://beatflow.app/battles-sitemap.xml
+Sitemap: https://beatflow.app/profiles-sitemap.xml
+
+# Host directive
+Host: https://beatflow.app 

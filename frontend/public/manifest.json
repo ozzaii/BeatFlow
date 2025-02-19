@@ -1,0 +1,159 @@
+{
+  "name": "BeatFlow",
+  "short_name": "BeatFlow",
+  "description": "Next-gen social beat making platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00ffff",
+  "orientation": "portrait",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "categories": ["music", "entertainment", "social"],
+  "icons": [
+    {
+      "src": "icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/battle-mode.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Beat Battle Mode"
+    },
+    {
+      "src": "screenshots/mixer.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Professional Mixer"
+    },
+    {
+      "src": "screenshots/collab.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Real-time Collaboration"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Beat",
+      "short_name": "Create",
+      "description": "Start creating a new beat",
+      "url": "/studio/new",
+      "icons": [{ "src": "icons/create.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Battle Mode",
+      "short_name": "Battle",
+      "description": "Join a beat battle",
+      "url": "/battle",
+      "icons": [{ "src": "icons/battle.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Profile",
+      "short_name": "Profile",
+      "description": "View your profile",
+      "url": "/profile",
+      "icons": [{ "src": "icons/profile.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "audio",
+          "accept": ["audio/*", ".wav", ".mp3", ".aac"]
+        }
+      ]
+    }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+beatflow",
+      "url": "/open?beat=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/open-file",
+      "accept": {
+        "audio/*": [".wav", ".mp3", ".aac"]
+      }
+    }
+  ],
+  "background_color_dark": "#000000",
+  "theme_color_dark": "#00ffff",
+  "display_override": ["window-controls-overlay"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": ["focus-existing", "auto"]
+  },
+  "handle_links": "preferred",
+  "scope_extensions": [
+    {
+      "origin": "*.beatflow.app"
+    }
+  ],
+  "note_taking": {
+    "new_note_url": "/studio/new",
+    "launch_types": ["create-new-note"]
+  }
+} 

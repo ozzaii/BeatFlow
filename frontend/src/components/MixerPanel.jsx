@@ -21,322 +21,472 @@ import {
   TabPanel,
   SimpleGrid,
   Progress,
+  Grid,
+  GridItem,
+  Collapse,
+  Button,
+  Select,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverBody,
+  PopoverHeader,
+  PopoverCloseButton,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FaVolumeMute,
   FaVolumeUp,
+  FaHeadphones,
   FaCompressAlt,
   FaWaveSquare,
   FaSliders,
   FaCog,
   FaSyncAlt,
+  FaEyeDropper,
+  FaRandom,
 } from 'react-icons/fa'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSoundEngine } from '../hooks/useSoundEngine'
 
 const MotionBox = motion(Box)
 
+const MeterDisplay = ({ value, min = -60, max = 6, warning = 0, danger = 3 }) => {
+  const height = ((value - min) / (max - min)) * 100
+  const color = value >= danger ? 'red.500' : 
+                value >= warning ? 'yellow.500' : 
+                'brand.500'
+
+  return (
+    <Box h="150px" w="4px" bg="dark.300" borderRadius="full" position="relative">
+      <Box
+        position="absolute"
+        bottom="0"
+        left="0"
+        right="0"
+        h={`${Math.min(100, Math.max(0, height))}%`}
+        bg={color}
+        borderRadius="full"
+        transition="height 0.1s, background-color 0.2s"
+      />
+    </Box>
+  )
+}
+
 const ChannelStrip = ({
   name,
-  volume = 0.75,
-  pan = 0,
-  solo = false,
-  muted = false,
-  effects = [],
+  color,
+  volume,
+  pan,
+  solo,
+  mute,
+  meter,
+  sends = [],
   onVolumeChange,
   onPanChange,
-  onMuteToggle,
   onSoloToggle,
+  onMuteToggle,
+  onSendChange,
   onEffectChange,
-  meter = { left: 0, right: 0 },
+  effects = {},
 }) => {
-  const borderColor = useColorModeValue('gray.200', 'gray.700')
-  const meterBg = useColorModeValue('gray.100', 'gray.700')
-  const meterColor = useColorModeValue('green.500', 'green.400')
-  const meterWarningColor = useColorModeValue('yellow.500', 'yellow.400')
-  const meterDangerColor = useColorModeValue('red.500', 'red.400')
-
-  const getMeterColor = (value) => {
-    if (value > 0.8) return meterDangerColor
-    if (value > 0.6) return meterWarningColor
-    return meterColor
-  }
+  const [showSends, setShowSends] = useState(false)
+  const [showEffects, setShowEffects] = useState(false)
 
   return (
     <VStack
       spacing={2}
-      p={2}
-      borderWidth={1}
-      borderColor={borderColor}
-      borderRadius="md"
-      width="100px"
-      height="full"
+      p={4}
+      bg="dark.200"
+      borderRadius="lg"
+      borderWidth="1px"
+      borderColor="whiteAlpha.100"
+      _hover={{
+        borderColor: color,
+        boxShadow: `0 0 20px ${color}`,
+      }}
+      transition="all 0.2s"
+      minW="120px"
     >
-      {/* Channel Name */}
-      <Text fontSize="sm" fontWeight="bold" isTruncated>
+      {/* Channel Label */}
+      <Text
+        color="whiteAlpha.900"
+        fontSize="sm"
+        fontWeight="bold"
+        textAlign="center"
+      >
         {name}
       </Text>
 
-      {/* Meters */}
-      <HStack spacing={1} width="full" height="150px">
-        <VStack width="8px" height="full" bg={meterBg} borderRadius="full" overflow="hidden">
-          <Box
-            width="full"
-            height={`${meter.left * 100}%`}
-            bg={getMeterColor(meter.left)}
-            transition="height 0.1s"
-            marginTop="auto"
-          />
-        </VStack>
-        <VStack width="8px" height="full" bg={meterBg} borderRadius="full" overflow="hidden">
-          <Box
-            width="full"
-            height={`${meter.right * 100}%`}
-            bg={getMeterColor(meter.right)}
-            transition="height 0.1s"
-            marginTop="auto"
-          />
-        </VStack>
+      {/* Meter */}
+      <HStack spacing={1}>
+        <MeterDisplay value={meter.left} />
+        <MeterDisplay value={meter.right} />
       </HStack>
 
-      {/* Pan Control */}
+      {/* Pan */}
       <Slider
-        value={pan * 50 + 50}
-        onChange={(v) => onPanChange((v - 50) / 50)}
-        min={0}
-        max={100}
-        width="full"
+        value={pan}
+        min={-1}
+        max={1}
+        step={0.01}
+        onChange={onPanChange}
+        w="80px"
+        transform="rotate(-90deg)"
       >
-        <SliderTrack>
-          <SliderFilledTrack />
+        <SliderTrack bg="dark.300">
+          <SliderFilledTrack bg={color} />
         </SliderTrack>
-        <SliderThumb />
+        <SliderThumb boxSize={2} bg={color} />
       </Slider>
 
-      {/* Volume Fader */}
+      {/* Volume */}
       <Slider
-        value={volume * 100}
-        onChange={(v) => onVolumeChange(v / 100)}
-        min={0}
-        max={100}
+        value={volume}
+        min={-60}
+        max={6}
+        step={0.1}
+        onChange={onVolumeChange}
         orientation="vertical"
-        height="200px"
-        marginY={4}
+        h="150px"
       >
-        <SliderTrack>
-          <SliderFilledTrack />
+        <SliderTrack bg="dark.300">
+          <SliderFilledTrack bg={color} />
         </SliderTrack>
-        <SliderThumb />
+        <SliderThumb boxSize={3} bg={color}>
+          <Text fontSize="xs" position="absolute" left="16px" whiteSpace="nowrap">
+            {volume.toFixed(1)} dB
+          </Text>
+        </SliderThumb>
       </Slider>
 
       {/* Controls */}
-      <HStack>
+      <HStack spacing={1}>
         <IconButton
-          icon={muted ? <FaVolumeMute /> : <FaVolumeUp />}
-          size="sm"
-          isActive={muted}
-          onClick={onMuteToggle}
+          icon={<FaHeadphones />}
+          size="xs"
+          variant={solo ? "solid" : "ghost"}
+          colorScheme="yellow"
+          onClick={onSoloToggle}
+          aria-label="Solo"
         />
         <IconButton
-          icon={<FaSyncAlt />}
-          size="sm"
-          isActive={solo}
-          onClick={onSoloToggle}
+          icon={mute ? <FaVolumeMute /> : <FaVolumeUp />}
+          size="xs"
+          variant={mute ? "solid" : "ghost"}
+          colorScheme="red"
+          onClick={onMuteToggle}
+          aria-label="Mute"
         />
       </HStack>
+
+      {/* Effects */}
+      <Popover placement="right">
+        <PopoverTrigger>
+          <IconButton
+            icon={<FaSliders />}
+            size="xs"
+            variant="ghost"
+            aria-label="Effects"
+          />
+        </PopoverTrigger>
+        <PopoverContent bg="dark.300" borderColor="whiteAlpha.200">
+          <PopoverHeader border="0">Effects</PopoverHeader>
+          <PopoverCloseButton />
+          <PopoverBody>
+            <VStack spacing={4} align="stretch">
+              {Object.entries(effects).map(([effect, params]) => (
+                <Box key={effect}>
+                  <Text
+                    color="whiteAlpha.700"
+                    fontSize="xs"
+                    textTransform="capitalize"
+                    mb={2}
+                  >
+                    {effect}
+                  </Text>
+                  {Object.entries(params).map(([param, value]) => (
+                    <VStack key={param} spacing={1} align="stretch">
+                      <Text color="whiteAlpha.600" fontSize="xs">
+                        {param}
+                      </Text>
+                      <Slider
+                        value={value * 100}
+                        min={0}
+                        max={100}
+                        onChange={(v) => onEffectChange(effect, param, v / 100)}
+                        size="sm"
+                      >
+                        <SliderTrack bg="dark.400">
+                          <SliderFilledTrack bg={color} />
+                        </SliderTrack>
+                        <SliderThumb boxSize={2} bg={color} />
+                      </Slider>
+                    </VStack>
+                  ))}
+                </Box>
+              ))}
+            </VStack>
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
+
+      {/* Sends */}
+      <Popover placement="right">
+        <PopoverTrigger>
+          <IconButton
+            icon={<FaRandom />}
+            size="xs"
+            variant="ghost"
+            aria-label="Sends"
+          />
+        </PopoverTrigger>
+        <PopoverContent bg="dark.300" borderColor="whiteAlpha.200">
+          <PopoverHeader border="0">Sends</PopoverHeader>
+          <PopoverCloseButton />
+          <PopoverBody>
+            <VStack spacing={4} align="stretch">
+              {sends.map((send, index) => (
+                <VStack key={index} spacing={1} align="stretch">
+                  <Text color="whiteAlpha.700" fontSize="xs">
+                    Send {index + 1}
+                  </Text>
+                  <Slider
+                    value={send.level}
+                    min={-60}
+                    max={6}
+                    onChange={(v) => onSendChange(index, v)}
+                    size="sm"
+                  >
+                    <SliderTrack bg="dark.400">
+                      <SliderFilledTrack bg={color} />
+                    </SliderTrack>
+                    <SliderThumb boxSize={2} bg={color} />
+                  </Slider>
+                </VStack>
+              ))}
+            </VStack>
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
     </VStack>
   )
 }
 
-const EffectRack = ({
-  effects,
-  onEffectChange,
-  onEffectAdd,
-  onEffectRemove,
+const MasterSection = ({
+  volume,
+  meter,
+  onVolumeChange,
+  eq = { low: 0, mid: 0, high: 0 },
+  onEQChange,
+  compressor = {
+    threshold: -24,
+    ratio: 12,
+    attack: 0.003,
+    release: 0.25,
+  },
+  onCompressorChange,
 }) => {
   return (
-    <VStack spacing={4} p={4}>
-      {effects.map((effect, index) => (
-        <Box
-          key={effect.id}
-          width="full"
-          p={4}
-          borderWidth={1}
-          borderColor="gray.200"
-          borderRadius="md"
-        >
-          <VStack spacing={3}>
-            <HStack justify="space-between" width="full">
-              <Text fontWeight="bold">{effect.name}</Text>
-              <IconButton
-                icon={<FaCog />}
-                size="sm"
-                variant="ghost"
-              />
-            </HStack>
-            {effect.parameters.map((param) => (
-              <Box key={param.name} width="full">
-                <HStack justify="space-between" mb={1}>
-                  <Text fontSize="sm">{param.name}</Text>
-                  <Text fontSize="xs" color="gray.500">
-                    {Math.round(param.value * 100)}%
+    <VStack
+      spacing={4}
+      p={4}
+      bg="dark.200"
+      borderRadius="lg"
+      borderWidth="1px"
+      borderColor="whiteAlpha.100"
+      _hover={{
+        borderColor: 'brand.500',
+        boxShadow: '0 0 20px var(--chakra-colors-brand-500)',
+      }}
+      transition="all 0.2s"
+      minW="200px"
+    >
+      <Text
+        color="whiteAlpha.900"
+        fontSize="lg"
+        fontWeight="bold"
+        textAlign="center"
+      >
+        Master
+      </Text>
+
+      {/* Meters */}
+      <HStack spacing={2}>
+        <MeterDisplay value={meter.left} />
+        <MeterDisplay value={meter.right} />
+      </HStack>
+
+      {/* Volume */}
+      <Slider
+        value={volume}
+        min={-60}
+        max={6}
+        step={0.1}
+        onChange={onVolumeChange}
+        orientation="vertical"
+        h="200px"
+      >
+        <SliderTrack bg="dark.300">
+          <SliderFilledTrack bg="brand.500" />
+        </SliderTrack>
+        <SliderThumb boxSize={4} bg="brand.500">
+          <Text fontSize="xs" position="absolute" left="20px" whiteSpace="nowrap">
+            {volume.toFixed(1)} dB
+          </Text>
+        </SliderThumb>
+      </Slider>
+
+      {/* EQ */}
+      <Popover placement="right">
+        <PopoverTrigger>
+          <IconButton
+            icon={<FaSliders />}
+            size="sm"
+            variant="ghost"
+            aria-label="EQ"
+          />
+        </PopoverTrigger>
+        <PopoverContent bg="dark.300" borderColor="whiteAlpha.200">
+          <PopoverHeader border="0">Master EQ</PopoverHeader>
+          <PopoverCloseButton />
+          <PopoverBody>
+            <VStack spacing={4}>
+              {Object.entries(eq).map(([band, value]) => (
+                <VStack key={band} spacing={1}>
+                  <Text color="whiteAlpha.700" fontSize="xs" textTransform="uppercase">
+                    {band}
                   </Text>
-                </HStack>
-                <Slider
-                  value={param.value * 100}
-                  onChange={(v) => onEffectChange(effect.id, param.name, v / 100)}
-                  min={0}
-                  max={100}
-                >
-                  <SliderTrack>
-                    <SliderFilledTrack />
-                  </SliderTrack>
-                  <SliderThumb />
-                </Slider>
-              </Box>
-            ))}
-          </VStack>
-        </Box>
-      ))}
+                  <Slider
+                    value={value}
+                    min={-12}
+                    max={12}
+                    step={0.1}
+                    onChange={(v) => onEQChange(band, v)}
+                  >
+                    <SliderTrack bg="dark.400">
+                      <SliderFilledTrack bg="brand.500" />
+                    </SliderTrack>
+                    <SliderThumb boxSize={3} bg="brand.500" />
+                  </Slider>
+                </VStack>
+              ))}
+            </VStack>
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
+
+      {/* Compressor */}
+      <Popover placement="right">
+        <PopoverTrigger>
+          <IconButton
+            icon={<FaCompressAlt />}
+            size="sm"
+            variant="ghost"
+            aria-label="Compressor"
+          />
+        </PopoverTrigger>
+        <PopoverContent bg="dark.300" borderColor="whiteAlpha.200">
+          <PopoverHeader border="0">Master Compressor</PopoverHeader>
+          <PopoverCloseButton />
+          <PopoverBody>
+            <VStack spacing={4}>
+              {Object.entries(compressor).map(([param, value]) => (
+                <VStack key={param} spacing={1}>
+                  <Text color="whiteAlpha.700" fontSize="xs" textTransform="uppercase">
+                    {param}
+                  </Text>
+                  <Slider
+                    value={value}
+                    min={param === 'threshold' ? -60 : 0}
+                    max={param === 'threshold' ? 0 : 
+                         param === 'ratio' ? 20 :
+                         param === 'attack' ? 1 :
+                         param === 'release' ? 1 : 1}
+                    step={0.1}
+                    onChange={(v) => onCompressorChange(param, v)}
+                  >
+                    <SliderTrack bg="dark.400">
+                      <SliderFilledTrack bg="brand.500" />
+                    </SliderTrack>
+                    <SliderThumb boxSize={3} bg="brand.500" />
+                  </Slider>
+                </VStack>
+              ))}
+            </VStack>
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
     </VStack>
   )
 }
 
-const MixerPanel = ({
-  tracks = [],
-  masterEffects = [],
-  onTrackChange,
-  onMasterEffectChange,
-}) => {
-  const [selectedTrack, setSelectedTrack] = useState(null)
-  const [meterData, setMeterData] = useState({})
-  
-  const bgColor = useColorModeValue('white', 'gray.800')
-  const borderColor = useColorModeValue('gray.200', 'gray.700')
+const MixerPanel = ({ channels = [], auxSends = [] }) => {
+  const {
+    masterVolume,
+    setMasterVolume,
+    masterMeter,
+    setMasterEQ,
+    setMasterCompressor,
+    setMasterLimiter,
+  } = useSoundEngine()
 
-  // Update meters
-  useEffect(() => {
-    const updateMeters = () => {
-      // In a real implementation, this would get actual meter data from the audio engine
-      setMeterData(
-        Object.fromEntries(
-          tracks.map(track => [
-            track.id,
-            {
-              left: Math.random() * track.volume,
-              right: Math.random() * track.volume,
-            }
-          ])
-        )
-      )
-    }
+  const [eq, setEQ] = useState({ low: 0, mid: 0, high: 0 })
+  const [compressor, setCompressor] = useState({
+    threshold: -24,
+    ratio: 12,
+    attack: 0.003,
+    release: 0.25,
+  })
 
-    const interval = setInterval(updateMeters, 100)
-    return () => clearInterval(interval)
-  }, [tracks])
+  const handleEQChange = useCallback((band, value) => {
+    setEQ(prev => ({ ...prev, [band]: value }))
+    setMasterEQ(band, value)
+  }, [setMasterEQ])
+
+  const handleCompressorChange = useCallback((param, value) => {
+    setCompressor(prev => ({ ...prev, [param]: value }))
+    setMasterCompressor(param, value)
+  }, [setMasterCompressor])
 
   return (
     <Box
-      bg={bgColor}
-      borderRadius="lg"
-      borderWidth={1}
-      borderColor={borderColor}
-      p={4}
+      w="full"
+      overflowX="auto"
+      css={{
+        '&::-webkit-scrollbar': {
+          height: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'var(--chakra-colors-dark-300)',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'var(--chakra-colors-brand-500)',
+          borderRadius: '4px',
+        },
+      }}
     >
-      <VStack spacing={4}>
-        <HStack spacing={4} width="full" overflowX="auto" pb={4}>
-          {/* Channel Strips */}
-          {tracks.map((track) => (
-            <ChannelStrip
-              key={track.id}
-              name={track.name}
-              volume={track.volume}
-              pan={track.pan}
-              solo={track.solo}
-              muted={track.muted}
-              effects={track.effects}
-              meter={meterData[track.id] || { left: 0, right: 0 }}
-              onVolumeChange={(volume) => onTrackChange(track.id, { volume })}
-              onPanChange={(pan) => onTrackChange(track.id, { pan })}
-              onMuteToggle={() => onTrackChange(track.id, { muted: !track.muted })}
-              onSoloToggle={() => onTrackChange(track.id, { solo: !track.solo })}
-              onEffectChange={(effectId, param, value) =>
-                onTrackChange(track.id, {
-                  effects: track.effects.map(effect =>
-                    effect.id === effectId
-                      ? {
-                          ...effect,
-                          parameters: effect.parameters.map(p =>
-                            p.name === param ? { ...p, value } : p
-                          ),
-                        }
-                      : effect
-                  ),
-                })
-              }
-            />
-          ))}
-
-          {/* Master Channel */}
+      <HStack spacing={4} p={4} minW="fit-content">
+        {channels.map((channel, index) => (
           <ChannelStrip
-            name="Master"
-            volume={1}
-            pan={0}
-            effects={masterEffects}
-            meter={{ left: 0.5, right: 0.5 }}
-            onVolumeChange={(volume) => {/* Handle master volume */}}
-            onPanChange={(pan) => {/* Handle master pan */}}
-            onEffectChange={(effectId, param, value) =>
-              onMasterEffectChange(effectId, param, value)
-            }
+            key={index}
+            {...channel}
+            sends={auxSends.map(send => ({
+              name: send.name,
+              level: channel.sends?.[send.id] ?? -60,
+            }))}
           />
-        </HStack>
-
-        {/* Effect Racks */}
-        {selectedTrack && (
-          <Box width="full">
-            <Tabs>
-              <TabList>
-                <Tab>Channel Effects</Tab>
-                <Tab>Master Effects</Tab>
-                <Tab>Send Effects</Tab>
-              </TabList>
-
-              <TabPanels>
-                <TabPanel>
-                  <EffectRack
-                    effects={selectedTrack.effects}
-                    onEffectChange={(effectId, param, value) =>
-                      onTrackChange(selectedTrack.id, {
-                        effects: selectedTrack.effects.map(effect =>
-                          effect.id === effectId
-                            ? {
-                                ...effect,
-                                parameters: effect.parameters.map(p =>
-                                  p.name === param ? { ...p, value } : p
-                                ),
-                              }
-                            : effect
-                        ),
-                      })
-                    }
-                  />
-                </TabPanel>
-                <TabPanel>
-                  <EffectRack
-                    effects={masterEffects}
-                    onEffectChange={onMasterEffectChange}
-                  />
-                </TabPanel>
-                <TabPanel>
-                  {/* Implement send effects */}
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
-          </Box>
-        )}
-      </VStack>
+        ))}
+        <MasterSection
+          volume={masterVolume}
+          meter={masterMeter}
+          onVolumeChange={setMasterVolume}
+          eq={eq}
+          onEQChange={handleEQChange}
+          compressor={compressor}
+          onCompressorChange={handleCompressorChange}
+        />
+      </HStack>
     </Box>
   )
 }

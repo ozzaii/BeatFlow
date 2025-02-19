@@ -17,11 +17,17 @@ import {
 } from '@chakra-ui/react'
 import { keyframes, css } from '@emotion/react'
 import { useState, useEffect, useCallback } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import * as Tone from 'tone'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaMusic, FaHeadphones, FaWaveSquare } from 'react-icons/fa'
 import BeatMaker from './components/BeatMaker'
+import BattleMode from './components/BattleMode'
+import Home from './pages/Home'
 import theme from './theme'
+
+// Get base URL for GitHub Pages
+const basename = process.env.PUBLIC_URL || '/'
 
 // Enhanced animations
 const pulseAnimation = keyframes`
@@ -223,67 +229,73 @@ function App() {
     }
 
     return (
-      <SlideFade in={true} offsetY="20px">
-        <BeatMaker />
-      </SlideFade>
+      <Router basename={basename}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/studio" element={<BeatMaker />} />
+          <Route path="/battle" element={<BattleMode />} />
+        </Routes>
+      </Router>
     )
   }
 
   return (
-    <Box
-      minH="100vh"
-      bg="black"
-      bgGradient="radial-gradient(circle at center, rgba(0,255,255,0.1) 0%, rgba(0,0,0,1) 70%)"
-      py={8}
-      position="relative"
-      overflow="hidden"
-      _before={{
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundImage: 'linear-gradient(180deg, rgba(0,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px)',
-        backgroundSize: '30px 30px',
-        pointerEvents: 'none',
-      }}
-    >
-      <Container maxW={isMobile ? "container.sm" : "container.lg"}>
-        <VStack spacing={12}>
-          <Heading
-            size="2xl"
-            bgGradient="linear(to-r, brand.500, accent.500)"
-            bgClip="text"
-            textShadow="0 0 20px rgba(0, 255, 255, 0.5)"
-            fontWeight="extrabold"
-            letterSpacing="wider"
-            textAlign="center"
-            css={css`
-              animation: ${glowAnimation} 3s infinite;
-              &:hover {
-                animation: ${pulseAnimation} 2s infinite;
-              }
-            `}
-          >
-            BeatFlow
-          </Heading>
-
-          <AnimatePresence mode="wait">
-            <MotionBox
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              width="100%"
+    <ChakraProvider theme={theme}>
+      <Box
+        minH="100vh"
+        bg="black"
+        bgGradient="radial-gradient(circle at center, rgba(0,255,255,0.1) 0%, rgba(0,0,0,1) 70%)"
+        py={8}
+        position="relative"
+        overflow="hidden"
+        _before={{
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'linear-gradient(180deg, rgba(0,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+          pointerEvents: 'none',
+        }}
+      >
+        <Container maxW={isMobile ? "container.sm" : "container.lg"}>
+          <VStack spacing={12}>
+            <Heading
+              size="2xl"
+              bgGradient="linear(to-r, brand.500, accent.500)"
+              bgClip="text"
+              textShadow="0 0 20px rgba(0, 255, 255, 0.5)"
+              fontWeight="extrabold"
+              letterSpacing="wider"
+              textAlign="center"
+              css={css`
+                animation: ${glowAnimation} 3s infinite;
+                &:hover {
+                  animation: ${pulseAnimation} 2s infinite;
+                }
+              `}
             >
-              {renderContent()}
-            </MotionBox>
-          </AnimatePresence>
-        </VStack>
-      </Container>
-    </Box>
+              BeatFlow
+            </Heading>
+
+            <AnimatePresence mode="wait">
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                width="100%"
+              >
+                {renderContent()}
+              </MotionBox>
+            </AnimatePresence>
+          </VStack>
+        </Container>
+      </Box>
+    </ChakraProvider>
   )
 }
 
-export default App
+export default App 

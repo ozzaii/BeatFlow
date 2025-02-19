@@ -28,10 +28,11 @@ import {
   Textarea,
   SimpleGrid,
   Switch,
+  Collapse,
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { FaPlay, FaStop, FaRandom, FaTrash, FaShare, FaSave, FaDownload, FaHeart, FaComment } from 'react-icons/fa'
+import { FaPlay, FaStop, FaRandom, FaTrash, FaShare, FaSave, FaDownload, FaHeart, FaComment, FaMinus, FaPlus, FaSolo, FaMute, FaChevronUp, FaChevronDown } from 'react-icons/fa'
 import * as Tone from 'tone'
 import { beatApi } from '../services/api'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -52,10 +53,10 @@ const glowAnimation = keyframes`
 `
 
 const TRACKS = [
-  { id: 'kick', name: 'Kick', color: '#00ffff' },
-  { id: 'snare', name: 'Snare', color: '#ff00ff' },
-  { id: 'hihat', name: 'Hi-Hat', color: '#ffff00' },
-  { id: 'synth', name: 'Synth', color: '#00ff00' },
+  { id: 'kick', name: 'Kick', color: 'neon.blue', icon: '🥁' },
+  { id: 'snare', name: 'Snare', color: 'neon.pink', icon: '🔥' },
+  { id: 'hihat', name: 'Hi-Hat', color: 'neon.yellow', icon: '⚡' },
+  { id: 'synth', name: 'Synth', color: 'neon.green', icon: '🎹' },
 ]
 
 const EDM_PRESETS = {
@@ -108,6 +109,11 @@ const INSTRUMENTS = {
           release: 1.4,
           attackCurve: 'exponential'
         }
+      },
+      presets: {
+        '909': { pitchDecay: 0.03, octaves: 8, envelope: { decay: 0.3, release: 1.2 } },
+        '808': { pitchDecay: 0.08, octaves: 12, envelope: { decay: 0.6, release: 1.8 } },
+        'Acoustic': { pitchDecay: 0.02, octaves: 6, envelope: { decay: 0.2, release: 0.8 } }
       }
     },
     snare: {
@@ -120,6 +126,11 @@ const INSTRUMENTS = {
           sustain: 0,
           release: 0.2
         }
+      },
+      presets: {
+        '909': { noise: { type: 'white' }, envelope: { decay: 0.25 } },
+        '808': { noise: { type: 'pink' }, envelope: { decay: 0.3 } },
+        'Acoustic': { noise: { type: 'brown' }, envelope: { decay: 0.15 } }
       }
     },
     hihat: {
@@ -135,18 +146,11 @@ const INSTRUMENTS = {
         modulationIndex: 32,
         resonance: 4000,
         octaves: 1.5
-      }
-    },
-    clap: {
-      type: 'noise',
-      options: {
-        noise: { type: 'pink' },
-        envelope: {
-          attack: 0.001,
-          decay: 0.3,
-          sustain: 0,
-          release: 0.1
-        }
+      },
+      presets: {
+        '909': { frequency: 280, harmonicity: 4.8, modulationIndex: 28 },
+        '808': { frequency: 220, harmonicity: 5.5, modulationIndex: 35 },
+        'Acoustic': { frequency: 180, harmonicity: 4.2, modulationIndex: 25 }
       }
     }
   },
@@ -234,7 +238,13 @@ const EFFECTS = {
     type: 'reverb',
     options: {
       decay: 1.5,
-      preDelay: 0.01
+      preDelay: 0.01,
+      wet: 0.3
+    },
+    presets: {
+      'Small Room': { decay: 1.0, preDelay: 0.01, wet: 0.2 },
+      'Large Hall': { decay: 3.0, preDelay: 0.03, wet: 0.4 },
+      'Cosmic': { decay: 5.0, preDelay: 0.05, wet: 0.5 }
     }
   },
   delay: {
@@ -243,6 +253,11 @@ const EFFECTS = {
       delayTime: '8n',
       feedback: 0.5,
       wet: 0.3
+    },
+    presets: {
+      'Slap': { delayTime: '16n', feedback: 0.3, wet: 0.25 },
+      'Echo': { delayTime: '4n', feedback: 0.6, wet: 0.35 },
+      'Dub': { delayTime: '8n.', feedback: 0.7, wet: 0.4 }
     }
   },
   chorus: {
@@ -279,6 +294,13 @@ const EFFECTS = {
   }
 }
 
+const MIXER_CHANNELS = {
+  kick: { volume: 0, pan: 0, solo: false, mute: false },
+  snare: { volume: 0, pan: 0, solo: false, mute: false },
+  hihat: { volume: 0, pan: 0, solo: false, mute: false },
+  synth: { volume: 0, pan: 0, solo: false, mute: false }
+}
+
 const BeatMaker = ({ beatId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
@@ -307,6 +329,18 @@ const BeatMaker = ({ beatId }) => {
     distortion: false,
     bitcrusher: false
   })
+  const [mixerSettings, setMixerSettings] = useState(MIXER_CHANNELS)
+  const [drumKit, setDrumKit] = useState('909')
+  const [effectPresets, setEffectPresets] = useState({
+    reverb: 'Small Room',
+    delay: 'Slap'
+  })
+  const [showMixer, setShowMixer] = useState(false)
+  const [showEffects, setShowEffects] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordedNotes, setRecordedNotes] = useState([])
+  const [quantize, setQuantize] = useState(true)
+  const [swing, setSwing] = useState(0)
   
   const bgColor = useColorModeValue('rgba(0, 0, 0, 0.9)', 'rgba(0, 0, 0, 0.95)')
   const stepColor = useColorModeValue('rgba(20, 20, 20, 0.8)', 'rgba(30, 30, 30, 0.8)')
@@ -349,91 +383,104 @@ const BeatMaker = ({ beatId }) => {
 
   // Initialize audio with enhanced effects
   useEffect(() => {
-    // Create audio context and analyser
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-    const analyser = audioContext.createAnalyser()
-    analyser.fftSize = 256
-    analyserRef.current = analyser
+    const setupAudio = async () => {
+      // Create master bus with limiter and analyzer
+      const masterBus = new Tone.Channel({
+        volume: 0,
+        pan: 0,
+        limiter: new Tone.Limiter(-3),
+        analyzer: new Tone.Analyser('waveform', 128)
+      }).toDestination()
 
-    // Create effects chain
-    const effects = {
-      reverb: new Tone.Reverb(EFFECTS.reverb.options),
-      delay: new Tone.FeedbackDelay(EFFECTS.delay.options),
-      chorus: new Tone.Chorus(EFFECTS.chorus.options),
-      phaser: new Tone.Phaser(EFFECTS.phaser.options),
-      distortion: new Tone.Distortion(EFFECTS.distortion.options),
-      bitcrusher: new Tone.BitCrusher(EFFECTS.bitcrusher.options),
-      limiter: new Tone.Limiter(-3)
-    }
-
-    // Initialize instruments with enhanced options
-    const instruments = {
-      kick: new Tone.MembraneSynth(INSTRUMENTS.DRUMS.kick.options),
-      snare: new Tone.NoiseSynth(INSTRUMENTS.DRUMS.snare.options),
-      hihat: new Tone.MetalSynth(INSTRUMENTS.DRUMS.hihat.options),
-      clap: new Tone.NoiseSynth(INSTRUMENTS.DRUMS.clap.options),
-      lead: new Tone.FMSynth(INSTRUMENTS.SYNTHS.lead.options),
-      pad: new Tone.AMSynth(INSTRUMENTS.SYNTHS.pad.options),
-      bass: new Tone.MonoSynth(INSTRUMENTS.SYNTHS.bass.options),
-      pluck: new Tone.PluckSynth(INSTRUMENTS.SYNTHS.pluck.options)
-    }
-
-    // Connect instruments to effects chain based on active effects
-    Object.values(instruments).forEach(inst => {
-      let chain = [inst]
-      
-      Object.entries(activeEffects).forEach(([effect, isActive]) => {
-        if (isActive && effects[effect]) {
-          chain.push(effects[effect])
-        }
+      // Create mixer channels with effects
+      const channels = {}
+      Object.keys(MIXER_CHANNELS).forEach(channel => {
+        channels[channel] = new Tone.Channel({
+          volume: mixerSettings[channel].volume,
+          pan: mixerSettings[channel].pan,
+          mute: mixerSettings[channel].mute,
+          solo: mixerSettings[channel].solo
+        }).connect(masterBus)
       })
-      
-      chain.push(effects.limiter, Tone.Destination)
-      Tone.connect(chain)
-    })
 
-    instrumentsRef.current = instruments
-    effectsRef.current = effects
-    
-    Tone.Transport.bpm.value = bpm
-    
-    const loop = new Tone.Sequence(
-      (time, step) => {
-        Object.entries(patterns).forEach(([trackId, pattern]) => {
-          if (pattern[step % 16]) {
-            if (trackId === 'synth') {
-              const notes = ['C4', 'E4', 'G4', 'A4']
-              instruments[trackId].triggerAttackRelease(notes[Math.floor(step/4) % notes.length], '8n', time)
-            } else {
-              instruments[trackId].triggerAttackRelease(trackId === 'kick' ? 'C1' : 'C4', '8n', time)
-            }
-          }
+      // Initialize instruments with selected drum kit
+      const instruments = {}
+      Object.entries(INSTRUMENTS.DRUMS).forEach(([name, config]) => {
+        const preset = config.presets[drumKit]
+        instruments[name] = new Tone[config.type === 'membrane' ? 'MembraneSynth' : 
+                                   config.type === 'noise' ? 'NoiseSynth' : 
+                                   'MetalSynth']({
+          ...config.options,
+          ...preset
+        }).connect(channels[name])
+      })
+
+      // Initialize effects with presets
+      const effects = {}
+      Object.entries(EFFECTS).forEach(([name, config]) => {
+        const preset = config.presets[effectPresets[name]]
+        effects[name] = new Tone[config.type === 'reverb' ? 'Reverb' :
+                                config.type === 'delay' ? 'FeedbackDelay' :
+                                config.type]({
+          ...config.options,
+          ...preset
         })
-        setCurrentStep(step % 16)
-      },
-      [...Array(64).keys()],
-      '16n'
-    )
+      })
 
-    if (isPlaying) {
-      Tone.start()
-      Tone.Transport.start()
-      loop.start(0)
-      startVisualization()
-    } else {
-      Tone.Transport.stop()
-      loop.stop()
-      setCurrentStep(0)
-      stopVisualization()
+      // Connect effects to master bus
+      Object.values(effects).reduce((chain, effect) => chain.connect(effect), masterBus)
+
+      instrumentsRef.current = instruments
+      effectsRef.current = effects
+      
+      // Set up transport
+      Tone.Transport.bpm.value = bpm
+      Tone.Transport.swing = swing
+      Tone.Transport.swingSubdivision = '16n'
+
+      // Create sequencer with quantization
+      const loop = new Tone.Sequence(
+        (time, step) => {
+          Object.entries(patterns).forEach(([trackId, pattern]) => {
+            if (pattern[step] && !mixerSettings[trackId].mute && 
+               (!Object.values(mixerSettings).some(ch => ch.solo) || mixerSettings[trackId].solo)) {
+              const instrument = instruments[trackId]
+              if (trackId === 'synth') {
+                const notes = ['C4', 'E4', 'G4', 'A4']
+                instrument.triggerAttackRelease(
+                  notes[Math.floor(step/4) % notes.length],
+                  quantize ? '16n' : '32n',
+                  time,
+                  velocities[trackId][step] / 127
+                )
+              } else {
+                instrument.triggerAttackRelease(
+                  trackId === 'kick' ? 'C1' : 'C4',
+                  quantize ? '16n' : '32n',
+                  time,
+                  velocities[trackId][step] / 127
+                )
+              }
+            }
+          })
+          setCurrentStep(step)
+          updateVisualization()
+        },
+        [...Array(TOTAL_STEPS).keys()],
+        '16n'
+      )
+
+      return () => {
+        loop.dispose()
+        Object.values(instruments).forEach(inst => inst.dispose())
+        Object.values(effects).forEach(effect => effect.dispose())
+        Object.values(channels).forEach(channel => channel.dispose())
+        masterBus.dispose()
+      }
     }
 
-    return () => {
-      loop.dispose()
-      Object.values(instruments).forEach(inst => inst.dispose())
-      Object.values(effects).forEach(effect => effect.dispose())
-      stopVisualization()
-    }
-  }, [isPlaying, patterns, bpm, activeEffects])
+    setupAudio()
+  }, [bpm, patterns, mixerSettings, drumKit, effectPresets, quantize, swing])
 
   // Enhanced visualization
   const drawVisualization = (ctx, dataArray, bufferLength, canvas) => {
@@ -744,13 +791,11 @@ const BeatMaker = ({ beatId }) => {
 
   return (
     <Box
-      p={6}
-      borderRadius="2xl"
-      bg={bgColor}
-      boxShadow="dark-lg"
-      border="1px solid rgba(0, 255, 255, 0.2)"
-      backdropFilter="blur(10px)"
       position="relative"
+      borderRadius="xl"
+      bg="dark.100"
+      p={6}
+      boxShadow="0 0 30px rgba(0, 255, 255, 0.1)"
       _before={{
         content: '""',
         position: 'absolute',
@@ -758,403 +803,453 @@ const BeatMaker = ({ beatId }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        borderRadius: '2xl',
-        padding: '2px',
-        background: 'linear-gradient(45deg, rgba(0,255,255,0.5), rgba(255,0,255,0.5))',
-        mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-        maskComposite: 'exclude',
+        borderRadius: 'xl',
+        border: '1px solid',
+        borderColor: 'brand.500',
+        opacity: 0.3,
         pointerEvents: 'none',
       }}
     >
       <VStack spacing={8}>
-        {/* Title and Genre */}
-        <HStack width="full" spacing={4}>
-          <Input
-            placeholder="Beat Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            color={textColor}
-            borderColor={textColor}
-            _hover={{ borderColor: textColor }}
-            _focus={{ borderColor: textColor, boxShadow: borderGlow }}
+        {/* Transport Controls with Recording */}
+        <HStack spacing={4} justify="center" w="full">
+          <IconButton
+            icon={isPlaying ? <FaStop /> : <FaPlay />}
+            onClick={isPlaying ? stop : togglePlay}
+            size="lg"
+            variant="neon"
+            aria-label={isPlaying ? 'Stop' : 'Play'}
+            _hover={{
+              transform: 'scale(1.1)',
+              boxShadow: '0 0 20px var(--chakra-colors-brand-500)',
+            }}
           />
-          <Select
-            value={genre}
-            onChange={(e) => setGenre(e.target.value)}
-            color={textColor}
-            borderColor={textColor}
-            _hover={{ borderColor: textColor }}
-            _focus={{ borderColor: textColor, boxShadow: borderGlow }}
-          >
-            <option value="House">House</option>
-            <option value="Techno">Techno</option>
-            <option value="Trance">Trance</option>
-            <option value="Dubstep">Dubstep</option>
-            <option value="Other">Other</option>
-          </Select>
+          <IconButton
+            icon={<FaRandom />}
+            onClick={() => randomizePattern()}
+            size="lg"
+            variant="neon"
+            aria-label="Randomize"
+            _hover={{
+              transform: 'scale(1.1)',
+              boxShadow: '0 0 20px var(--chakra-colors-brand-500)',
+            }}
+          />
+          <IconButton
+            icon={isRecording ? <FaStop /> : <FaCircle />}
+            onClick={() => setIsRecording(!isRecording)}
+            size="lg"
+            variant="neon"
+            color={isRecording ? 'red.500' : 'whiteAlpha.900'}
+            aria-label={isRecording ? 'Stop Recording' : 'Start Recording'}
+            _hover={{
+              transform: 'scale(1.1)',
+              boxShadow: '0 0 20px var(--chakra-colors-red-500)',
+            }}
+          />
           <Menu>
             <MenuButton
-              as={Button}
-              color={textColor}
-              bg="transparent"
-              border="2px solid"
-              borderColor={textColor}
-              boxShadow={borderGlow}
+              as={IconButton}
+              icon={<FaShare />}
+              size="lg"
+              variant="neon"
+              aria-label="Share"
               _hover={{
-                transform: 'scale(1.05)',
-                boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
+                transform: 'scale(1.1)',
+                boxShadow: '0 0 20px var(--chakra-colors-brand-500)',
               }}
-            >
-              {selectedPreset || 'Load Preset'}
-            </MenuButton>
-            <MenuList bg="rgba(0, 0, 0, 0.9)" borderColor={textColor}>
-              {Object.keys(EDM_PRESETS).map(presetName => (
-                <MenuItem
-                  key={presetName}
-                  onClick={() => loadPreset(presetName)}
-                  _hover={{ bg: 'rgba(0, 255, 255, 0.1)' }}
-                  color={textColor}
-                >
-                  {presetName}
-                </MenuItem>
-              ))}
+            />
+            <MenuList bg="dark.200" borderColor="brand.500">
+              <MenuItem onClick={onOpen} icon={<FaSave />}>
+                Save Beat
+              </MenuItem>
+              <MenuItem onClick={exportBeat} icon={<FaDownload />}>
+                Export
+              </MenuItem>
             </MenuList>
           </Menu>
         </HStack>
 
-        {/* Controls */}
-        <HStack spacing={6} width="full" justify="center">
-          <IconButton
-            icon={isPlaying ? <FaStop /> : <FaPlay />}
-            onClick={() => setIsPlaying(!isPlaying)}
-            size="lg"
-            isRound
-            color={textColor}
-            bg="transparent"
-            border="2px solid"
-            borderColor={textColor}
-            boxShadow={borderGlow}
-            _hover={{
-              transform: 'scale(1.1)',
-              boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
-            }}
-            _active={{
-              transform: 'scale(0.95)',
-            }}
-            animation={isPlaying ? `${pulseAnimation} 2s infinite` : 'none'}
-          />
-          <IconButton
-            icon={<FaRandom />}
-            onClick={randomize}
-            color={textColor}
-            bg="transparent"
-            border="2px solid"
-            borderColor={textColor}
-            boxShadow={borderGlow}
-            _hover={{
-              transform: 'scale(1.1)',
-              boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
-            }}
-          />
-          <IconButton
-            icon={<FaTrash />}
-            onClick={clear}
-            color={textColor}
-            bg="transparent"
-            border="2px solid"
-            borderColor={textColor}
-            boxShadow={borderGlow}
-            _hover={{
-              transform: 'scale(1.1)',
-              boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
-            }}
-          />
-          <VStack spacing={1} minW="200px">
-            <Text fontSize="md" color={textColor} textShadow={`0 0 10px ${textColor}`}>
-              BPM: {bpm}
+        {/* Enhanced Controls */}
+        <HStack spacing={8} w="full" justify="center">
+          {/* BPM Control */}
+          <VStack spacing={2}>
+            <Text color="whiteAlpha.900" fontSize="sm" fontWeight="bold">
+              BPM
+            </Text>
+            <HStack spacing={2}>
+              <IconButton
+                icon={<FaMinus />}
+                size="sm"
+                variant="ghost"
+                onClick={() => setBpm(Math.max(60, bpm - 1))}
+              />
+              <Text color="brand.500" fontSize="xl" fontWeight="bold" w="60px" textAlign="center">
+                {bpm}
+              </Text>
+              <IconButton
+                icon={<FaPlus />}
+                size="sm"
+                variant="ghost"
+                onClick={() => setBpm(Math.min(200, bpm + 1))}
+              />
+            </HStack>
+          </VStack>
+
+          {/* Swing Control */}
+          <VStack spacing={2}>
+            <Text color="whiteAlpha.900" fontSize="sm" fontWeight="bold">
+              Swing
             </Text>
             <Slider
-              value={bpm}
-              onChange={setBpm}
-              min={60}
-              max={180}
-              step={1}
+              value={swing}
+              min={0}
+              max={1}
+              step={0.1}
+              onChange={setSwing}
+              w="100px"
             >
-              <SliderTrack bg="rgba(0, 255, 255, 0.2)">
-                <SliderFilledTrack bg={textColor} />
+              <SliderTrack bg="dark.300">
+                <SliderFilledTrack bg="brand.500" />
               </SliderTrack>
-              <SliderThumb
-                boxSize={4}
-                bg={textColor}
-                boxShadow={borderGlow}
-                _focus={{ boxShadow: borderGlow }}
-              />
+              <SliderThumb boxSize={4} bg="brand.500" />
             </Slider>
           </VStack>
-          
-          <HStack spacing={2}>
-            <IconButton
-              icon={<FaShare />}
-              onClick={() => {
-                // TODO: Implement sharing functionality
-              }}
-              color={textColor}
-              bg="transparent"
-              border="2px solid"
-              borderColor={textColor}
-              boxShadow={borderGlow}
-              _hover={{
-                transform: 'scale(1.1)',
-                boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
-              }}
+
+          {/* Quantize Toggle */}
+          <VStack spacing={2}>
+            <Text color="whiteAlpha.900" fontSize="sm" fontWeight="bold">
+              Quantize
+            </Text>
+            <Switch
+              isChecked={quantize}
+              onChange={(e) => setQuantize(e.target.checked)}
+              colorScheme="brand"
             />
-            <IconButton
-              icon={<FaSave />}
-              onClick={handleSave}
-              color={textColor}
-              bg="transparent"
-              border="2px solid"
-              borderColor={textColor}
-              boxShadow={borderGlow}
-              _hover={{
-                transform: 'scale(1.1)',
-                boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
-              }}
-            />
-            {beatId && (
-              <>
-                <IconButton
-                  icon={<FaHeart />}
-                  onClick={handleLike}
-                  color={beat?.likes?.includes(user?.id) ? '#ff0000' : textColor}
-                  bg="transparent"
-                  border="2px solid"
-                  borderColor={textColor}
-                  boxShadow={borderGlow}
-                  _hover={{
-                    transform: 'scale(1.1)',
-                    boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
-                  }}
-                />
-                <IconButton
-                  icon={<FaComment />}
-                  onClick={onOpen}
-                  color={textColor}
-                  bg="transparent"
-                  border="2px solid"
-                  borderColor={textColor}
-                  boxShadow={borderGlow}
-                  _hover={{
-                    transform: 'scale(1.1)',
-                    boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
-                  }}
-                />
-              </>
-            )}
-          </HStack>
+          </VStack>
+
+          {/* Drum Kit Selector */}
+          <VStack spacing={2}>
+            <Text color="whiteAlpha.900" fontSize="sm" fontWeight="bold">
+              Drum Kit
+            </Text>
+            <Select
+              value={drumKit}
+              onChange={(e) => setDrumKit(e.target.value)}
+              variant="filled"
+              size="sm"
+              w="120px"
+            >
+              <option value="909">TR-909</option>
+              <option value="808">TR-808</option>
+              <option value="Acoustic">Acoustic</option>
+            </Select>
+          </VStack>
         </HStack>
 
-        {/* Beat Grid */}
-        <VStack spacing={4} width="full">
-          {TRACKS.map(track => (
-            <Box key={track.id} width="full">
-              <Text
-                color={track.color}
-                fontSize="lg"
-                fontWeight="bold"
-                mb={2}
-                textShadow={`0 0 10px ${track.color}`}
-              >
-                {track.name}
-              </Text>
-              <Grid
-                templateColumns="repeat(16, 1fr)"
-                gap={2}
-                width="full"
-                p={4}
-                bg="rgba(0, 0, 0, 0.5)"
-                borderRadius="xl"
-                border={`1px solid ${track.color}40`}
-              >
-                {patterns[track.id].map((isActive, i) => (
-                  <Box
-                    key={i}
-                    bg={
-                      i === currentStep
-                        ? currentStepColor
-                        : isActive
-                        ? track.color
-                        : stepColor
-                    }
-                    h="35px"
-                    borderRadius="md"
-                    cursor="pointer"
-                    onClick={() => toggleStep(track.id, i)}
-                    transition="all 0.2s"
-                    boxShadow={isActive ? `0 0 10px ${track.color}` : 'none'}
-                    _hover={{
-                      transform: 'scale(1.1)',
-                      boxShadow: `0 0 20px ${isActive ? track.color : textColor}`,
-                    }}
-                    animation={i === currentStep ? `${glowAnimation} 0.5s infinite` : 'none'}
-                  />
-                ))}
-              </Grid>
-            </Box>
-          ))}
-        </VStack>
-
-        {/* Visualization Style Selector */}
-        <HStack spacing={4}>
-          <Text color={textColor}>Visualization:</Text>
-          <Select
-            value={visualStyle}
-            onChange={(e) => setVisualStyle(e.target.value)}
-            color={textColor}
-            borderColor={textColor}
-            width="200px"
-          >
-            {Object.entries(VISUALIZATION_STYLES).map(([key, value]) => (
-              <option key={key} value={value}>
-                {key.charAt(0) + key.slice(1).toLowerCase()}
-              </option>
-            ))}
-          </Select>
-        </HStack>
-
-        {/* Effects Controls */}
-        <SimpleGrid columns={3} spacing={4} width="full">
-          {Object.entries(EFFECTS).map(([effect, config]) => (
+        {/* Track Grid with Enhanced Features */}
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} w="full">
+          {TRACKS.map((track) => (
             <Box
-              key={effect}
+              key={track.id}
+              bg="dark.200"
               p={4}
               borderRadius="lg"
-              borderWidth={1}
-              borderColor={activeEffects[effect] ? textColor : 'gray.600'}
+              borderWidth="1px"
+              borderColor="whiteAlpha.100"
+              _hover={{
+                borderColor: track.color,
+                boxShadow: `0 0 20px ${track.color}`,
+                transform: 'translateY(-2px)',
+              }}
+              transition="all 0.2s"
             >
-              <VStack>
-                <HStack justify="space-between" width="full">
-                  <Text color={textColor}>
-                    {effect.charAt(0).toUpperCase() + effect.slice(1)}
-                  </Text>
-                  <Switch
-                    isChecked={activeEffects[effect]}
-                    onChange={() => setActiveEffects(prev => ({
-                      ...prev,
-                      [effect]: !prev[effect]
-                    }))}
-                    colorScheme="cyan"
-                  />
+              <VStack spacing={4}>
+                <HStack justify="space-between" w="full">
+                  <HStack>
+                    <Text fontSize="2xl">{track.icon}</Text>
+                    <Text
+                      color="whiteAlpha.900"
+                      fontSize="lg"
+                      fontWeight="bold"
+                    >
+                      {track.name}
+                    </Text>
+                  </HStack>
+                  <HStack spacing={2}>
+                    <IconButton
+                      icon={<FaSolo />}
+                      size="sm"
+                      variant={mixerSettings[track.id].solo ? "solid" : "ghost"}
+                      colorScheme="yellow"
+                      onClick={() => toggleSolo(track.id)}
+                      aria-label="Solo"
+                    />
+                    <IconButton
+                      icon={<FaMute />}
+                      size="sm"
+                      variant={mixerSettings[track.id].mute ? "solid" : "ghost"}
+                      colorScheme="red"
+                      onClick={() => toggleMute(track.id)}
+                      aria-label="Mute"
+                    />
+                    <IconButton
+                      icon={<FaTrash />}
+                      size="sm"
+                      variant="ghost"
+                      colorScheme="red"
+                      onClick={() => clearPattern(track.id)}
+                      aria-label="Clear Pattern"
+                    />
+                  </HStack>
                 </HStack>
-                {activeEffects[effect] && (
-                  <VStack spacing={2} width="full">
-                    {Object.entries(config.options).map(([param, value]) => (
-                      <Box key={param} width="full">
-                        <Text color={textColor} fontSize="xs">
-                          {param}
-                        </Text>
-                        <Slider
-                          value={value * 100}
-                          onChange={(v) => {
-                            if (effectsRef.current?.[effect]) {
-                              effectsRef.current[effect][param] = v / 100
-                            }
-                          }}
-                          min={0}
-                          max={100}
-                        >
-                          <SliderTrack bg="rgba(0, 255, 255, 0.2)">
-                            <SliderFilledTrack bg={textColor} />
-                          </SliderTrack>
-                          <SliderThumb
-                            boxSize={3}
-                            bg={textColor}
-                            boxShadow={borderGlow}
-                          />
-                        </Slider>
-                      </Box>
-                    ))}
-                  </VStack>
-                )}
+
+                {/* Pattern Grid with Velocity */}
+                <Grid
+                  templateColumns={`repeat(${TOTAL_STEPS / 4}, 1fr)`}
+                  gap={1}
+                  w="full"
+                >
+                  {patterns[track.id].map((isActive, index) => (
+                    <Box
+                      key={index}
+                      position="relative"
+                      h="50px"
+                    >
+                      <Box
+                        bg={isActive ? track.color : 'dark.300'}
+                        w="full"
+                        h={isActive ? `${(velocities[track.id][index] / 127) * 100}%` : "full"}
+                        borderRadius="md"
+                        cursor="pointer"
+                        onClick={() => toggleStep(track.id, index)}
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          openVelocityModal(track.id, index)
+                        }}
+                        opacity={currentStep === index ? 1 : 0.7}
+                        transform={currentStep === index ? 'scale(1.1)' : 'scale(1)'}
+                        transition="all 0.1s"
+                        position="absolute"
+                        bottom={0}
+                        _hover={{
+                          opacity: 1,
+                          transform: 'scale(1.1)',
+                        }}
+                      />
+                    </Box>
+                  ))}
+                </Grid>
+
+                {/* Channel Strip */}
+                <HStack w="full" spacing={4}>
+                  <Slider
+                    value={mixerSettings[track.id].volume}
+                    min={-60}
+                    max={6}
+                    onChange={(v) => updateMixerSetting(track.id, 'volume', v)}
+                    orientation="vertical"
+                    h="100px"
+                  >
+                    <SliderTrack bg="dark.300">
+                      <SliderFilledTrack bg={track.color} />
+                    </SliderTrack>
+                    <SliderThumb boxSize={3} bg={track.color} />
+                  </Slider>
+                  <Slider
+                    value={mixerSettings[track.id].pan}
+                    min={-1}
+                    max={1}
+                    onChange={(v) => updateMixerSetting(track.id, 'pan', v)}
+                    w="100px"
+                  >
+                    <SliderTrack bg="dark.300">
+                      <SliderFilledTrack bg={track.color} />
+                    </SliderTrack>
+                    <SliderThumb boxSize={3} bg={track.color} />
+                  </Slider>
+                </HStack>
               </VStack>
             </Box>
           ))}
         </SimpleGrid>
 
+        {/* Effects Rack */}
+        <Box w="full">
+          <HStack justify="space-between" mb={4}>
+            <Text
+              color="whiteAlpha.900"
+              fontSize="xl"
+              fontWeight="bold"
+            >
+              Effects
+            </Text>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowEffects(!showEffects)}
+              rightIcon={showEffects ? <FaChevronUp /> : <FaChevronDown />}
+            >
+              {showEffects ? 'Hide' : 'Show'} Effects
+            </Button>
+          </HStack>
+          <Collapse in={showEffects}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {Object.entries(EFFECTS).map(([effect, config]) => (
+                <Box
+                  key={effect}
+                  bg="dark.200"
+                  p={4}
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor={activeEffects[effect] ? 'brand.500' : 'whiteAlpha.100'}
+                >
+                  <VStack spacing={4}>
+                    <HStack justify="space-between" w="full">
+                      <Text
+                        color={activeEffects[effect] ? 'brand.500' : 'whiteAlpha.700'}
+                        fontSize="lg"
+                        fontWeight="bold"
+                        textTransform="capitalize"
+                      >
+                        {effect}
+                      </Text>
+                      <Switch
+                        isChecked={activeEffects[effect]}
+                        onChange={() => toggleEffect(effect)}
+                        colorScheme="brand"
+                      />
+                    </HStack>
+                    <Select
+                      value={effectPresets[effect]}
+                      onChange={(e) => updateEffectPreset(effect, e.target.value)}
+                      variant="filled"
+                      size="sm"
+                      isDisabled={!activeEffects[effect]}
+                    >
+                      {Object.keys(config.presets).map(preset => (
+                        <option key={preset} value={preset}>{preset}</option>
+                      ))}
+                    </Select>
+                    {activeEffects[effect] && (
+                      <SimpleGrid columns={2} spacing={4} w="full">
+                        {Object.entries(config.options).map(([param, value]) => (
+                          <VStack key={param} spacing={1} align="start">
+                            <Text
+                              color="whiteAlpha.700"
+                              fontSize="xs"
+                              textTransform="capitalize"
+                            >
+                              {param}
+                            </Text>
+                            <Slider
+                              value={value * 100}
+                              min={0}
+                              max={100}
+                              onChange={(v) => updateEffectParam(effect, param, v / 100)}
+                              size="sm"
+                            >
+                              <SliderTrack bg="dark.300">
+                                <SliderFilledTrack bg="brand.500" />
+                              </SliderTrack>
+                              <SliderThumb boxSize={2} bg="brand.500" />
+                            </Slider>
+                          </VStack>
+                        ))}
+                      </SimpleGrid>
+                    )}
+                  </VStack>
+                </Box>
+              ))}
+            </SimpleGrid>
+          </Collapse>
+        </Box>
+
         {/* Visualization */}
         <Box
-          width="full"
-          height="100px"
-          bg="rgba(0, 0, 0, 0.3)"
-          borderRadius="xl"
+          w="full"
+          h="200px"
+          bg="dark.200"
+          borderRadius="lg"
           overflow="hidden"
           position="relative"
         >
           <canvas
             ref={canvasRef}
-            width={800}
-            height={100}
             style={{
               width: '100%',
-              height: '100%'
+              height: '100%',
+              filter: 'blur(1px)',
             }}
           />
         </Box>
-
-        {/* Comments Modal */}
-        <Modal isOpen={isOpen} onClose={onClose}>
-          <ModalOverlay backdropFilter="blur(10px)" />
-          <ModalContent
-            bg={bgColor}
-            border="1px solid rgba(0, 255, 255, 0.2)"
-            boxShadow={borderGlow}
-          >
-            <ModalHeader color={textColor}>Comments</ModalHeader>
-            <ModalCloseButton color={textColor} />
-            <ModalBody pb={6}>
-              <VStack spacing={4}>
-                {beat?.comments?.map((comment, index) => (
-                  <Box
-                    key={index}
-                    p={3}
-                    bg="rgba(0, 0, 0, 0.3)"
-                    borderRadius="md"
-                    width="full"
-                  >
-                    <Text color={textColor} fontWeight="bold">
-                      {comment.user.username}
-                    </Text>
-                    <Text color={textColor}>{comment.text}</Text>
-                  </Box>
-                ))}
-                <Textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  color={textColor}
-                  borderColor={textColor}
-                  _hover={{ borderColor: textColor }}
-                  _focus={{ borderColor: textColor, boxShadow: borderGlow }}
-                />
-                <Button
-                  onClick={handleComment}
-                  color={textColor}
-                  bg="transparent"
-                  border="2px solid"
-                  borderColor={textColor}
-                  boxShadow={borderGlow}
-                  _hover={{
-                    transform: 'scale(1.05)',
-                    boxShadow: `0 0 20px ${textColor}, 0 0 40px ${textColor}`,
-                  }}
-                >
-                  Post Comment
-                </Button>
-              </VStack>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
       </VStack>
+
+      {/* Save Beat Modal */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay
+          bg="blackAlpha.900"
+          backdropFilter="blur(10px)"
+        />
+        <ModalContent
+          bg="dark.200"
+          borderColor="brand.500"
+          borderWidth="1px"
+          boxShadow="0 0 30px var(--chakra-colors-brand-500)"
+        >
+          <ModalHeader color="whiteAlpha.900">Save Your Beat</ModalHeader>
+          <ModalCloseButton color="whiteAlpha.900" />
+          <ModalBody pb={6}>
+            <VStack spacing={4}>
+              <Input
+                placeholder="Beat Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                variant="filled"
+                bg="dark.300"
+                borderColor="brand.500"
+                _hover={{ bg: 'dark.400' }}
+                _focus={{ bg: 'dark.400' }}
+              />
+              <Select
+                placeholder="Select Genre"
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                variant="filled"
+                bg="dark.300"
+                borderColor="brand.500"
+                _hover={{ bg: 'dark.400' }}
+                _focus={{ bg: 'dark.400' }}
+              >
+                <option value="House">House</option>
+                <option value="Hip Hop">Hip Hop</option>
+                <option value="Techno">Techno</option>
+                <option value="Trap">Trap</option>
+                <option value="Ambient">Ambient</option>
+              </Select>
+              <Textarea
+                placeholder="Add a comment (optional)"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                variant="filled"
+                bg="dark.300"
+                borderColor="brand.500"
+                _hover={{ bg: 'dark.400' }}
+                _focus={{ bg: 'dark.400' }}
+              />
+              <Button
+                colorScheme="brand"
+                onClick={saveBeat}
+                isLoading={isSaving}
+                loadingText="Saving..."
+                w="full"
+              >
+                Save Beat
+              </Button>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   )
 }

@@ -16,6 +16,27 @@ const SYNTH_TYPES = {
   POLY: 'poly'
 }
 
+const MASTER_EFFECTS = {
+  compressor: {
+    threshold: -24,
+    ratio: 12,
+    attack: 0.003,
+    release: 0.25,
+    knee: 30
+  },
+  limiter: {
+    threshold: -1,
+    release: 0.1
+  },
+  eq: {
+    low: 0,
+    mid: 0,
+    high: 0,
+    lowFrequency: 200,
+    highFrequency: 2600
+  }
+}
+
 export const useSoundEngine = () => {
   const [isInitialized, setIsInitialized] = useState(false)
   const [isReady, setIsReady] = useState(false)
@@ -30,6 +51,16 @@ export const useSoundEngine = () => {
   // Performance optimization
   const bufferPool = useRef(new Map())
   const workerRef = useRef(null)
+
+  const masterBusRef = useRef(null)
+  const masterCompressorRef = useRef(null)
+  const masterLimiterRef = useRef(null)
+  const masterEQRef = useRef(null)
+  const analyserRef = useRef(null)
+  const [masterVolume, setMasterVolume] = useState(0)
+  const [masterMeter, setMasterMeter] = useState({ left: -60, right: -60 })
+  const [cpuLoad, setCpuLoad] = useState(0)
+  const rafRef = useRef(null)
 
   // Initialize Tone.js and set up audio context
   const initialize = useCallback(async () => {
@@ -59,6 +90,126 @@ export const useSoundEngine = () => {
       console.error('Failed to initialize audio engine:', error)
     }
   }, [bpm])
+
+  // Initialize master bus and effects
+  useEffect(() => {
+    const setupMasterBus = async () => {
+      // Create master EQ
+      const eq = new Tone.EQ3({
+        low: MASTER_EFFECTS.eq.low,
+        mid: MASTER_EFFECTS.eq.mid,
+        high: MASTER_EFFECTS.eq.high,
+        lowFrequency: MASTER_EFFECTS.eq.lowFrequency,
+        highFrequency: MASTER_EFFECTS.eq.highFrequency
+      })
+
+      // Create master compressor
+      const compressor = new Tone.Compressor({
+        threshold: MASTER_EFFECTS.compressor.threshold,
+        ratio: MASTER_EFFECTS.compressor.ratio,
+        attack: MASTER_EFFECTS.compressor.attack,
+        release: MASTER_EFFECTS.compressor.release,
+        knee: MASTER_EFFECTS.compressor.knee
+      })
+
+      // Create master limiter
+      const limiter = new Tone.Limiter({
+        threshold: MASTER_EFFECTS.limiter.threshold,
+        release: MASTER_EFFECTS.limiter.release
+      })
+
+      // Create master channel
+      const masterBus = new Tone.Channel({
+        volume: masterVolume,
+        mute: false,
+        pan: 0
+      }).toDestination()
+
+      // Create analyzer
+      const analyser = new Tone.Analyser({
+        type: 'waveform',
+        size: 1024
+      })
+
+      // Connect everything in series
+      eq.connect(compressor)
+      compressor.connect(limiter)
+      limiter.connect(masterBus)
+      masterBus.connect(analyser)
+
+      // Store references
+      masterEQRef.current = eq
+      masterCompressorRef.current = compressor
+      masterLimiterRef.current = limiter
+      masterBusRef.current = masterBus
+      analyserRef.current = analyser
+
+      setIsReady(true)
+
+      // Start metering
+      startMetering()
+
+      return () => {
+        stopMetering()
+        eq.dispose()
+        compressor.dispose()
+        limiter.dispose()
+        masterBus.dispose()
+        analyser.dispose()
+      }
+    }
+
+    setupMasterBus()
+  }, [masterVolume])
+
+  // Metering
+  const startMetering = useCallback(() => {
+    const updateMeters = () => {
+      if (masterBusRef.current && analyserRef.current) {
+        const values = analyserRef.current.getValue()
+        const rms = calculateRMS(values)
+        setMasterMeter({
+          left: Math.max(-60, 20 * Math.log10(rms)),
+          right: Math.max(-60, 20 * Math.log10(rms))
+        })
+        setCpuLoad(Tone.context.currentTime / Tone.context.sampleTime * 100)
+      }
+      rafRef.current = requestAnimationFrame(updateMeters)
+    }
+    updateMeters()
+  }, [])
+
+  const stopMetering = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current)
+    }
+  }, [])
+
+  // Utility functions
+  const calculateRMS = (values) => {
+    const squares = values.map(v => v * v)
+    const mean = squares.reduce((a, b) => a + b) / squares.length
+    return Math.sqrt(mean)
+  }
+
+  // Master bus controls
+  const setMasterEQ = useCallback((band, value) => {
+    if (masterEQRef.current) {
+      masterEQRef.current[band].value = value
+    }
+  }, [])
+
+  const setMasterCompressor = useCallback((param, value) => {
+    if (masterCompressorRef.current) {
+      masterCompressorRef.current[param] = value
+    }
+  }, [])
+
+  const setMasterLimiter = useCallback((param, value) => {
+    if (masterLimiterRef.current) {
+      masterLimiterRef.current[param] = value
+    }
+  }, [])
 
   // Create and manage synthesizers
   const createSynth = useCallback((type = SYNTH_TYPES.FM, options = {}) => {
@@ -232,5 +383,16 @@ export const useSoundEngine = () => {
     setTempo,
     SYNTH_TYPES,
     SAMPLE_TYPES,
+    masterVolume,
+    setMasterVolume,
+    masterMeter,
+    cpuLoad,
+    setMasterEQ,
+    setMasterCompressor,
+    setMasterLimiter,
+    getAnalyser: () => analyserRef.current,
+    getMasterBus: () => masterBusRef.current
   }
-} 
+}
+
+export default useSoundEngine 

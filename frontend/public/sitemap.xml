@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Main Pages -->
+  <sitemap>
+    <loc>https://beatflow.app/main-sitemap.xml</loc>
+    <lastmod>2024-02-14</lastmod>
+  </sitemap>
+
+  <!-- Dynamic Beat Content -->
+  <sitemap>
+    <loc>https://beatflow.app/beats-sitemap.xml</loc>
+    <lastmod>2024-02-14</lastmod>
+  </sitemap>
+
+  <!-- Battle Pages -->
+  <sitemap>
+    <loc>https://beatflow.app/battles-sitemap.xml</loc>
+    <lastmod>2024-02-14</lastmod>
+  </sitemap>
+
+  <!-- User Profiles -->
+  <sitemap>
+    <loc>https://beatflow.app/profiles-sitemap.xml</loc>
+    <lastmod>2024-02-14</lastmod>
+  </sitemap>
+
+  <!-- Genre Pages -->
+  <sitemap>
+    <loc>https://beatflow.app/genres-sitemap.xml</loc>
+    <lastmod>2024-02-14</lastmod>
+  </sitemap>
+
+  <!-- Competition Pages -->
+  <sitemap>
+    <loc>https://beatflow.app/competitions-sitemap.xml</loc>
+    <lastmod>2024-02-14</lastmod>
+  </sitemap>
+
+  <!-- Tutorial and Help Pages -->
+  <sitemap>
+    <loc>https://beatflow.app/help-sitemap.xml</loc>
+    <lastmod>2024-02-14</lastmod>
+  </sitemap>
+</sitemapindex>
+
+<!-- Main Sitemap -->
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- Home Page -->
+  <url>
+    <loc>https://beatflow.app/</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://beatflow.app/images/hero.jpg</image:loc>
+      <image:title>BeatFlow - Next-gen Social Beat Making</image:title>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://beatflow.app/videos/intro-thumb.jpg</video:thumbnail_loc>
+      <video:title>Welcome to BeatFlow</video:title>
+      <video:description>Create, collaborate, and compete in beat battles</video:description>
+      <video:content_loc>https://beatflow.app/videos/intro.mp4</video:content_loc>
+      <video:duration>60</video:duration>
+    </video:video>
+  </url>
+
+  <!-- Studio Page -->
+  <url>
+    <loc>https://beatflow.app/studio</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://beatflow.app/images/studio.jpg</image:loc>
+      <image:title>Professional Beat Making Studio</image:title>
+    </image:image>
+  </url>
+
+  <!-- Battle Mode -->
+  <url>
+    <loc>https://beatflow.app/battle</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://beatflow.app/images/battle.jpg</image:loc>
+      <image:title>Live Beat Battles</image:title>
+    </image:image>
+  </url>
+
+  <!-- Discover Page -->
+  <url>
+    <loc>https://beatflow.app/discover</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Trending Page -->
+  <url>
+    <loc>https://beatflow.app/trending</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Charts Page -->
+  <url>
+    <loc>https://beatflow.app/charts</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- About Page -->
+  <url>
+    <loc>https://beatflow.app/about</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Help Center -->
+  <url>
+    <loc>https://beatflow.app/help</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Blog -->
+  <url>
+    <loc>https://beatflow.app/blog</loc>
+    <lastmod>2024-02-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset> 
