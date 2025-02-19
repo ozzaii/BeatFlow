@@ -10,10 +10,18 @@ import {
   Spinner,
   Center
 } from '@chakra-ui/react'
+import { keyframes } from '@emotion/react'
 import { useState, useEffect } from 'react'
 import * as Tone from 'tone'
 import BeatMaker from './components/BeatMaker'
 import theme from './theme'
+
+// Define animations
+const pulseAnimation = keyframes`
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 255, 255, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
+`
 
 function App() {
   const [isAudioInitialized, setIsAudioInitialized] = useState(false)
@@ -38,7 +46,7 @@ function App() {
     }
 
     checkAudioSupport()
-  }, [])
+  }, [toast])
 
   const initializeAudio = async () => {
     setIsLoading(true)
@@ -136,6 +144,7 @@ function App() {
           colorScheme="cyan"
           variant="outline"
           isLoading={isLoading}
+          animation={`${pulseAnimation} 2s infinite`}
           _hover={{
             transform: 'scale(1.05)',
             boxShadow: '0 0 20px cyan',

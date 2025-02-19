@@ -1,13 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { ChakraProvider } from '@chakra-ui/react'
+import { ChakraProvider, Spinner, Center } from '@chakra-ui/react'
 import { HashRouter as Router } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth.jsx'
 import App from './App.jsx'
 import theme from './theme'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const Root = () => (
   <React.StrictMode>
     <ChakraProvider theme={theme}>
       <Router>
@@ -16,5 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </AuthProvider>
       </Router>
     </ChakraProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 )
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root />)
