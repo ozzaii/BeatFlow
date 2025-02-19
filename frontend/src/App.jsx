@@ -1,8 +1,29 @@
-import { ChakraProvider, Container, VStack, Heading, Box } from '@chakra-ui/react'
+import { ChakraProvider, Container, VStack, Heading, Box, Button, useToast } from '@chakra-ui/react'
+import { useState } from 'react'
+import * as Tone from 'tone'
 import BeatMaker from './components/BeatMaker'
 import theme from './theme'
 
 function App() {
+  const [isAudioInitialized, setIsAudioInitialized] = useState(false)
+  const toast = useToast()
+
+  const initializeAudio = async () => {
+    try {
+      await Tone.start()
+      setIsAudioInitialized(true)
+    } catch (error) {
+      console.error('Failed to initialize audio:', error)
+      toast({
+        title: 'Audio Error',
+        description: 'Failed to initialize audio. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    }
+  }
+
   return (
     <ChakraProvider theme={theme}>
       <Box
@@ -28,7 +49,23 @@ function App() {
             >
               BeatFlow
             </Heading>
-            <BeatMaker />
+
+            {!isAudioInitialized ? (
+              <Button
+                onClick={initializeAudio}
+                size="lg"
+                colorScheme="cyan"
+                variant="outline"
+                _hover={{
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 0 20px cyan',
+                }}
+              >
+                Click to Start Audio
+              </Button>
+            ) : (
+              <BeatMaker />
+            )}
           </VStack>
         </Container>
       </Box>
