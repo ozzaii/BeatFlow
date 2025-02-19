@@ -1,4 +1,15 @@
-import { ChakraProvider, Container, VStack, Heading, Box, Button, useToast } from '@chakra-ui/react'
+import { 
+  ChakraProvider, 
+  Container, 
+  VStack, 
+  Heading, 
+  Box, 
+  Button, 
+  useToast, 
+  Text,
+  Spinner,
+  Center
+} from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import * as Tone from 'tone'
 import BeatMaker from './components/BeatMaker'
@@ -7,6 +18,7 @@ import theme from './theme'
 function App() {
   const [isAudioInitialized, setIsAudioInitialized] = useState(false)
   const [isAudioSupported, setIsAudioSupported] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const toast = useToast()
 
   // Check audio support on mount
@@ -29,6 +41,7 @@ function App() {
   }, [])
 
   const initializeAudio = async () => {
+    setIsLoading(true)
     try {
       // Ensure we're in a secure context
       if (!window.isSecureContext) {
@@ -46,6 +59,9 @@ function App() {
       // Clean up test oscillator
       setTimeout(() => testOsc.dispose(), 200)
 
+      // Wait for Tone.js to be fully initialized
+      await Tone.loaded()
+      
       setIsAudioInitialized(true)
       
       toast({
@@ -64,39 +80,73 @@ function App() {
         duration: 5000,
         isClosable: true,
       })
+      // Reset state on error
+      setIsAudioInitialized(false)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  if (!isAudioSupported) {
-    return (
-      <ChakraProvider theme={theme}>
-        <Box
-          minH="100vh"
-          bg="black"
-          bgGradient="radial-gradient(circle at center, rgba(0,255,255,0.1) 0%, rgba(0,0,0,1) 70%)"
-          py={8}
+  const renderContent = () => {
+    if (!isAudioSupported) {
+      return (
+        <VStack spacing={6}>
+          <Heading
+            size="2xl"
+            bgGradient="linear(to-r, #00ffff, #ff00ff)"
+            bgClip="text"
+            textShadow="0 0 20px rgba(0, 255, 255, 0.5)"
+            fontWeight="extrabold"
+            letterSpacing="wider"
+            textAlign="center"
+          >
+            Browser Not Supported
+          </Heading>
+          <Text color="white" fontSize="lg" textAlign="center">
+            Your browser does not support the Web Audio API. Please try using a modern browser like Chrome, Firefox, or Safari.
+          </Text>
+        </VStack>
+      )
+    }
+
+    if (isLoading) {
+      return (
+        <Center>
+          <VStack spacing={6}>
+            <Spinner
+              thickness="4px"
+              speed="0.65s"
+              emptyColor="gray.200"
+              color="cyan.500"
+              size="xl"
+            />
+            <Text color="white" fontSize="lg">
+              Initializing Audio...
+            </Text>
+          </VStack>
+        </Center>
+      )
+    }
+
+    if (!isAudioInitialized) {
+      return (
+        <Button
+          onClick={initializeAudio}
+          size="lg"
+          colorScheme="cyan"
+          variant="outline"
+          isLoading={isLoading}
+          _hover={{
+            transform: 'scale(1.05)',
+            boxShadow: '0 0 20px cyan',
+          }}
         >
-          <Container maxW="container.lg">
-            <VStack spacing={12}>
-              <Heading
-                size="2xl"
-                bgGradient="linear(to-r, #00ffff, #ff00ff)"
-                bgClip="text"
-                textShadow="0 0 20px rgba(0, 255, 255, 0.5)"
-                fontWeight="extrabold"
-                letterSpacing="wider"
-                textAlign="center"
-              >
-                Browser Not Supported
-              </Heading>
-              <Text color="white">
-                Your browser does not support the Web Audio API. Please try using a modern browser like Chrome, Firefox, or Safari.
-              </Text>
-            </VStack>
-          </Container>
-        </Box>
-      </ChakraProvider>
-    )
+          Click to Start Audio
+        </Button>
+      )
+    }
+
+    return <BeatMaker />
   }
 
   return (
@@ -125,22 +175,7 @@ function App() {
               BeatFlow
             </Heading>
 
-            {!isAudioInitialized ? (
-              <Button
-                onClick={initializeAudio}
-                size="lg"
-                colorScheme="cyan"
-                variant="outline"
-                _hover={{
-                  transform: 'scale(1.05)',
-                  boxShadow: '0 0 20px cyan',
-                }}
-              >
-                Click to Start Audio
-              </Button>
-            ) : (
-              <BeatMaker />
-            )}
+            {renderContent()}
           </VStack>
         </Container>
       </Box>
