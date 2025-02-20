@@ -341,6 +341,12 @@ const BeatMaker = ({ beatId }) => {
   const [recordedNotes, setRecordedNotes] = useState([])
   const [quantize, setQuantize] = useState(true)
   const [swing, setSwing] = useState(0)
+  const [velocities] = useState(
+    TRACKS.reduce((acc, track) => ({
+      ...acc,
+      [track.id]: Array(TOTAL_STEPS).fill(127)
+    }), {})
+  )
   
   const bgColor = useColorModeValue('rgba(0, 0, 0, 0.9)', 'rgba(0, 0, 0, 0.95)')
   const stepColor = useColorModeValue('rgba(20, 20, 20, 0.8)', 'rgba(30, 30, 30, 0.8)')
@@ -621,31 +627,35 @@ const BeatMaker = ({ beatId }) => {
     }
   }
 
-  const startVisualization = () => {
+  const startVisualization = useCallback(() => {
     if (!canvasRef.current || !analyserRef.current) return
 
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     const analyser = analyserRef.current
+    
+    // Set canvas size to match display size
+    const { width, height } = canvas.getBoundingClientRect()
+    canvas.width = width
+    canvas.height = height
+
     const bufferLength = analyser.frequencyBinCount
     const dataArray = new Uint8Array(bufferLength)
 
     const draw = () => {
       animationFrameRef.current = requestAnimationFrame(draw)
-
       analyser.getByteFrequencyData(dataArray)
-
       drawVisualization(ctx, dataArray, bufferLength, canvas)
     }
 
     draw()
-  }
+  }, [])
 
-  const stopVisualization = () => {
+  const stopVisualization = useCallback(() => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
     }
-  }
+  }, [])
 
   // Load preset patterns
   const loadPreset = (presetName) => {
@@ -789,6 +799,169 @@ const BeatMaker = ({ beatId }) => {
     }
   }
 
+  // Add play/stop functionality
+  const togglePlay = useCallback(async () => {
+    try {
+      if (!isPlaying) {
+        // Start audio context if it's not running
+        await Tone.start()
+        Tone.Transport.bpm.value = bpm
+        Tone.Transport.start()
+        setIsPlaying(true)
+        startVisualization()
+      } else {
+        Tone.Transport.stop()
+        Tone.Transport.position = 0
+        setIsPlaying(false)
+        setCurrentStep(0)
+        stopVisualization()
+      }
+    } catch (error) {
+      console.error('Error toggling playback:', error)
+      toast({
+        title: 'Playback Error',
+        description: 'There was an error starting the audio. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }, [isPlaying, bpm, toast])
+
+  const stop = useCallback(() => {
+    if (isPlaying) {
+      Tone.Transport.stop()
+      Tone.Transport.position = 0
+      setIsPlaying(false)
+      setCurrentStep(0)
+      stopVisualization()
+    }
+  }, [isPlaying])
+
+  // Pattern manipulation functions
+  const randomizePattern = useCallback(() => {
+    setPatterns(prev => 
+      Object.keys(prev).reduce((acc, trackId) => ({
+        ...acc,
+        [trackId]: Array(TOTAL_STEPS).fill(false).map(() => Math.random() > 0.8)
+      }), {})
+    )
+  }, [])
+
+  const clearPattern = useCallback((trackId) => {
+    setPatterns(prev => ({
+      ...prev,
+      [trackId]: Array(TOTAL_STEPS).fill(false)
+    }))
+  }, [])
+
+  // Mixer functions
+  const toggleSolo = useCallback((trackId) => {
+    setMixerSettings(prev => ({
+      ...prev,
+      [trackId]: {
+        ...prev[trackId],
+        solo: !prev[trackId].solo
+      }
+    }))
+  }, [])
+
+  const toggleMute = useCallback((trackId) => {
+    setMixerSettings(prev => ({
+      ...prev,
+      [trackId]: {
+        ...prev[trackId],
+        mute: !prev[trackId].mute
+      }
+    }))
+  }, [])
+
+  const updateMixerSetting = useCallback((trackId, setting, value) => {
+    setMixerSettings(prev => ({
+      ...prev,
+      [trackId]: {
+        ...prev[trackId],
+        [setting]: value
+      }
+    }))
+  }, [])
+
+  // Effects functions
+  const toggleEffect = useCallback((effect) => {
+    setActiveEffects(prev => ({
+      ...prev,
+      [effect]: !prev[effect]
+    }))
+  }, [])
+
+  const updateEffectPreset = useCallback((effect, preset) => {
+    setEffectPresets(prev => ({
+      ...prev,
+      [effect]: preset
+    }))
+
+    if (effectsRef.current && effectsRef.current[effect]) {
+      const config = EFFECTS[effect]
+      const presetConfig = config.presets[preset]
+      Object.entries(presetConfig).forEach(([param, value]) => {
+        effectsRef.current[effect][param].value = value
+      })
+    }
+  }, [])
+
+  const updateEffectParam = useCallback((effect, param, value) => {
+    if (effectsRef.current && effectsRef.current[effect]) {
+      effectsRef.current[effect][param].value = value
+    }
+  }, [])
+
+  // Save beat function
+  const saveBeat = async () => {
+    if (!title.trim()) {
+      toast({
+        title: 'Title required',
+        description: 'Please give your beat a title',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+
+    try {
+      const beatData = {
+        title,
+        patterns,
+        bpm,
+        genre,
+        comment: comment.trim(),
+      }
+
+      if (beatId) {
+        await beatApi.updateBeat(beatId, beatData)
+      } else {
+        await beatApi.createBeat(beatData)
+      }
+
+      toast({
+        title: 'Success',
+        description: `Beat ${beatId ? 'updated' : 'saved'} successfully`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+      onClose()
+    } catch (error) {
+      toast({
+        title: 'Error saving beat',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
   return (
     <Box
       position="relative"
@@ -815,7 +988,7 @@ const BeatMaker = ({ beatId }) => {
         <HStack spacing={4} justify="center" w="full">
           <IconButton
             icon={isPlaying ? <FaStop /> : <FaPlay />}
-            onClick={isPlaying ? stop : togglePlay}
+            onClick={togglePlay}
             size="lg"
             variant="neon"
             aria-label={isPlaying ? 'Stop' : 'Play'}
