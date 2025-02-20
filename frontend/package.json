@@ -2,6 +2,14 @@
   "name": "beatflow",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src",
+    "format": "prettier --write \"src/**/*.{js,jsx}\""
+  },
   "dependencies": {
     "@chakra-ui/react": "^2.8.0",
     "@emotion/react": "^11.11.0",
@@ -9,7 +17,6 @@
     "@msgpack/msgpack": "^2.8.0",
     "@react-three/fiber": "^8.13.0",
     "@react-three/postprocessing": "^2.15.0",
-    "@wasm-tool/wasm-pack-plugin": "^1.7.0",
     "comlink": "^4.4.1",
     "framer-motion": "^10.12.0",
     "onnxruntime-web": "^1.15.0",
@@ -24,36 +31,11 @@
     "tone": "^14.7.77"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.0",
-    "@babel/plugin-proposal-class-properties": "^7.18.0",
-    "@babel/plugin-transform-runtime": "^7.22.0",
-    "@babel/preset-env": "^7.22.0",
-    "@babel/preset-react": "^7.22.0",
-    "babel-loader": "^9.1.0",
-    "compression-webpack-plugin": "^10.0.0",
-    "core-js": "^3.31.0",
-    "cross-env": "^7.0.3",
-    "css-loader": "^6.8.0",
-    "file-loader": "^6.2.0",
-    "html-webpack-plugin": "^5.5.0",
-    "style-loader": "^3.3.0",
-    "terser-webpack-plugin": "^5.3.0",
-    "webpack": "^5.88.0",
-    "webpack-bundle-analyzer": "^4.9.0",
-    "webpack-cli": "^5.1.0",
-    "webpack-dev-server": "^4.15.0",
-    "worker-loader": "^3.0.8",
-    "worker-plugin": "^5.0.1"
-  },
-  "scripts": {
-    "start": "cross-env NODE_ENV=development webpack serve --config config/webpack.config.js",
-    "build": "cross-env NODE_ENV=production webpack --config config/webpack.config.js",
-    "analyze": "cross-env ANALYZE=true npm run build",
-    "test": "jest",
-    "lint": "eslint src",
-    "format": "prettier --write \"src/**/*.{js,jsx}\"",
-    "wasm:build": "wasm-pack build wasm --target web",
-    "postinstall": "npm run wasm:build"
+    "@vitejs/plugin-react": "^4.2.0",
+    "eslint": "^8.0.0",
+    "eslint-config-react-app": "^7.0.0",
+    "prettier": "^2.8.0",
+    "vite": "^5.0.0"
   },
   "browserslist": {
     "production": [
@@ -66,8 +48,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "engines": {
-    "node": ">=16.0.0"
   }
 }
