@@ -32,7 +32,29 @@ import {
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { FaPlay, FaStop, FaRandom, FaTrash, FaShare, FaSave, FaDownload, FaHeart, FaComment, FaMinus, FaPlus, FaVolumeUp, FaVolumeMute, FaChevronUp, FaChevronDown } from 'react-icons/fa'
+import {
+  FaPlay,
+  FaStop,
+  FaRandom,
+  FaTrash,
+  FaShare,
+  FaSave,
+  FaDownload,
+  FaHeart,
+  FaComment,
+  FaMinus,
+  FaPlus,
+  FaVolumeUp,
+  FaVolumeMute,
+  FaChevronUp,
+  FaChevronDown,
+  FaCircle,
+  FaCrown,
+  FaFire,
+  FaTrophy,
+  FaMedal,
+  FaStar
+} from 'react-icons/fa'
 import * as Tone from 'tone'
 import { beatApi } from '../services/api'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -914,6 +936,54 @@ const BeatMaker = ({ beatId }) => {
       effectsRef.current[effect][param].value = value
     }
   }, [])
+
+  // Export functionality
+  const exportBeat = useCallback(() => {
+    try {
+      const exportData = {
+        title,
+        patterns,
+        bpm,
+        genre,
+        drumKit,
+        mixerSettings,
+        effectPresets,
+        activeEffects,
+        quantize,
+        swing,
+        velocities,
+        version: '1.0.0',
+        createdAt: new Date().toISOString(),
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${title || 'untitled'}_beat.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      toast({
+        title: 'Beat Exported',
+        description: 'Your beat has been exported successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error('Error exporting beat:', error)
+      toast({
+        title: 'Export Error',
+        description: 'There was an error exporting your beat. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }, [title, patterns, bpm, genre, drumKit, mixerSettings, effectPresets, activeEffects, quantize, swing, velocities, toast])
 
   // Save beat function
   const saveBeat = async () => {
