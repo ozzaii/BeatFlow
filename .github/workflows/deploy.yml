@@ -35,12 +35,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: frontend
-    env:
-      NODE_ENV: production
-      
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -68,14 +63,16 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
+        working-directory: frontend
         run: pnpm install --frozen-lockfile
 
       - name: Build frontend
+        working-directory: frontend
         run: pnpm run build
         env:
           VITE_APP_API_URL: 'https://${{ github.repository_owner }}.github.io/beatflow'
