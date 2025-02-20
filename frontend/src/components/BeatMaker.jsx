@@ -53,7 +53,17 @@ import {
   FaFire,
   FaTrophy,
   FaMedal,
-  FaStar
+  FaStar,
+  FaHeadphones,
+  FaMusic,
+  FaSliders,
+  FaCog,
+  FaWaveSquare,
+  FaRegHeart,
+  FaSlidersH,
+  FaVolumeDown,
+  FaVolumeOff,
+  FaVolumeMute as FaSolo
 } from 'react-icons/fa'
 import * as Tone from 'tone'
 import { beatApi } from '../services/api'
@@ -73,6 +83,14 @@ const glowAnimation = keyframes`
   50% { box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff; }
   100% { box-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 15px #00ffff; }
 `
+
+const VISUALIZATION_STYLES = {
+  BARS: 'bars',
+  WAVE: 'wave',
+  CIRCLE: 'circle',
+  PARTICLES: 'particles',
+  MATRIX: 'matrix'
+}
 
 const TRACKS = [
   { id: 'kick', name: 'Kick', color: 'neon.blue', icon: '🥁' },
@@ -106,14 +124,6 @@ const EDM_PRESETS = {
     hihat: [1,1,1,1, 0,1,1,1, 1,1,1,1, 0,1,1,1],
     synth: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,1,1,1]
   }
-}
-
-const VISUALIZATION_STYLES = {
-  BARS: 'bars',
-  WAVE: 'wave',
-  CIRCLE: 'circle',
-  PARTICLES: 'particles',
-  MATRIX: 'matrix'
 }
 
 const INSTRUMENTS = {
@@ -530,6 +540,8 @@ const BeatMaker = ({ beatId }) => {
       case VISUALIZATION_STYLES.MATRIX:
         drawMatrix(ctx, dataArray, bufferLength, canvas)
         break
+      default:
+        drawBars(ctx, dataArray, bufferLength, canvas)
     }
   }
 
@@ -538,12 +550,13 @@ const BeatMaker = ({ beatId }) => {
     let x = 0
 
     for (let i = 0; i < bufferLength; i++) {
-      const barHeight = dataArray[i] / 2
+      const barHeight = (dataArray[i] / 255) * canvas.height
 
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
+      const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0)
       gradient.addColorStop(0, '#00ffff')
-      gradient.addColorStop(1, '#ff00ff')
-      
+      gradient.addColorStop(0.5, '#ff00ff')
+      gradient.addColorStop(1, '#00ffff')
+
       ctx.fillStyle = gradient
       ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight)
 
@@ -553,8 +566,12 @@ const BeatMaker = ({ beatId }) => {
 
   const drawWave = (ctx, dataArray, bufferLength, canvas) => {
     ctx.beginPath()
-    ctx.strokeStyle = '#00ffff'
     ctx.lineWidth = 2
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0)
+    gradient.addColorStop(0, '#00ffff')
+    gradient.addColorStop(0.5, '#ff00ff')
+    gradient.addColorStop(1, '#00ffff')
+    ctx.strokeStyle = gradient
 
     const sliceWidth = canvas.width / bufferLength
     let x = 0
