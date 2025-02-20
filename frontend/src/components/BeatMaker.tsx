@@ -93,7 +93,102 @@ const VISUALIZATION_STYLES = {
   MATRIX: 'matrix'
 }
 
-const TRACKS = [
+interface Track {
+  id: keyof typeof MIXER_CHANNELS
+  name: string
+  color: string
+  icon: string
+}
+
+interface MixerChannel {
+  volume: number
+  pan: number
+  solo: boolean
+  mute: boolean
+}
+
+interface MixerSettings {
+  [key: string]: MixerChannel
+}
+
+interface Patterns {
+  [key: string]: boolean[]
+}
+
+interface Velocities {
+  [key: string]: number[]
+}
+
+interface EffectPresets {
+  [key: string]: string
+}
+
+interface ActiveEffects {
+  [key: string]: boolean
+}
+
+interface Beat {
+  title: string
+  patterns: Patterns
+  bpm: number
+  genre: string
+}
+
+interface VisualizationContext {
+  clearRect: (x: number, y: number, width: number, height: number) => void
+  beginPath: () => void
+  createLinearGradient: (x0: number, y0: number, x1: number, y1: number) => CanvasGradient
+  createRadialGradient: (x0: number, y0: number, r0: number, x1: number, y1: number, r1: number) => CanvasGradient
+  fillRect: (x: number, y: number, width: number, height: number) => void
+  fillStyle: string | CanvasGradient
+  strokeStyle: string | CanvasGradient
+  lineWidth: number
+  moveTo: (x: number, y: number) => void
+  lineTo: (x: number, y: number) => void
+  stroke: () => void
+  closePath: () => void
+  arc: (x: number, y: number, radius: number, startAngle: number, endAngle: number) => void
+  fill: () => void
+  font: string
+  fillText: (text: string, x: number, y: number) => void
+}
+
+interface AudioRefs {
+  instruments: {
+    [key: string]: Tone.Synth | Tone.MembraneSynth | Tone.NoiseSynth | Tone.MetalSynth
+  }
+  effects: {
+    [key: string]: Tone.Effect
+  }
+  analyser: Tone.Analyser | null
+}
+
+interface BeatMakerState {
+  patterns: Patterns
+  isPlaying: boolean
+  currentStep: number
+  bpm: number
+  title: string
+  genre: string
+  comment: string
+  beat: Beat | null
+  selectedPreset: string | null
+  visualStyle: keyof typeof VISUALIZATION_STYLES
+  activeEffects: ActiveEffects
+  mixerSettings: MixerSettings
+  drumKit: string
+  effectPresets: EffectPresets
+  showMixer: boolean
+  showEffects: boolean
+  isRecording: boolean
+  recordedNotes: any[] // TODO: Add proper type for recorded notes
+  quantize: boolean
+  swing: number
+  velocities: Velocities
+  isSaving: boolean
+}
+
+const TRACKS: Track[] = [
   { id: 'kick', name: 'Kick', color: 'neon.blue', icon: '🥁' },
   { id: 'snare', name: 'Snare', color: 'neon.pink', icon: '🔥' },
   { id: 'hihat', name: 'Hi-Hat', color: 'neon.yellow', icon: '⚡' },
@@ -352,29 +447,33 @@ const MIXER_CHANNELS = {
   snare: { volume: 0, pan: 0, solo: false, mute: false },
   hihat: { volume: 0, pan: 0, solo: false, mute: false },
   synth: { volume: 0, pan: 0, solo: false, mute: false }
+} as const
+
+interface BeatMakerProps {
+  beatId?: string
 }
 
-const BeatMaker = ({ beatId }) => {
+const BeatMaker: React.FC<BeatMakerProps> = ({ beatId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const { user } = useAuth()
   
-  const [patterns, setPatterns] = useState(
+  const [patterns, setPatterns] = useState<Patterns>(
     TRACKS.reduce((acc, track) => ({
       ...acc,
       [track.id]: Array(TOTAL_STEPS).fill(false)
     }), {})
   )
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [bpm, setBpm] = useState(DEFAULT_BPM)
-  const [title, setTitle] = useState('')
-  const [genre, setGenre] = useState('House')
-  const [comment, setComment] = useState('')
-  const [beat, setBeat] = useState(null)
-  const [selectedPreset, setSelectedPreset] = useState(null)
-  const [visualStyle, setVisualStyle] = useState(VISUALIZATION_STYLES.BARS)
-  const [activeEffects, setActiveEffects] = useState({
+  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [currentStep, setCurrentStep] = useState<number>(0)
+  const [bpm, setBpm] = useState<number>(DEFAULT_BPM)
+  const [title, setTitle] = useState<string>('')
+  const [genre, setGenre] = useState<string>('House')
+  const [comment, setComment] = useState<string>('')
+  const [beat, setBeat] = useState<Beat | null>(null)
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
+  const [visualStyle, setVisualStyle] = useState<keyof typeof VISUALIZATION_STYLES>(VISUALIZATION_STYLES.BARS)
+  const [activeEffects, setActiveEffects] = useState<ActiveEffects>({
     reverb: true,
     delay: true,
     chorus: false,
@@ -382,9 +481,9 @@ const BeatMaker = ({ beatId }) => {
     distortion: false,
     bitcrusher: false
   })
-  const [mixerSettings, setMixerSettings] = useState(MIXER_CHANNELS)
-  const [drumKit, setDrumKit] = useState('909')
-  const [effectPresets, setEffectPresets] = useState({
+  const [mixerSettings, setMixerSettings] = useState<MixerSettings>(MIXER_CHANNELS)
+  const [drumKit, setDrumKit] = useState<string>('909')
+  const [effectPresets, setEffectPresets] = useState<EffectPresets>({
     reverb: 'Small Room',
     delay: 'Slap',
     chorus: 'Light',
@@ -392,19 +491,19 @@ const BeatMaker = ({ beatId }) => {
     distortion: 'Light',
     bitcrusher: '8-bit'
   })
-  const [showMixer, setShowMixer] = useState(false)
-  const [showEffects, setShowEffects] = useState(false)
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordedNotes, setRecordedNotes] = useState([])
-  const [quantize, setQuantize] = useState(true)
-  const [swing, setSwing] = useState(0)
-  const [velocities] = useState(
+  const [showMixer, setShowMixer] = useState<boolean>(false)
+  const [showEffects, setShowEffects] = useState<boolean>(false)
+  const [isRecording, setIsRecording] = useState<boolean>(false)
+  const [recordedNotes, setRecordedNotes] = useState<any[]>([]) // TODO: Add proper type
+  const [quantize, setQuantize] = useState<boolean>(true)
+  const [swing, setSwing] = useState<number>(0)
+  const [velocities] = useState<Velocities>(
     TRACKS.reduce((acc, track) => ({
       ...acc,
       [track.id]: Array(TOTAL_STEPS).fill(127)
     }), {})
   )
-  const [isSaving, setIsSaving] = useState(false)
+  const [isSaving, setIsSaving] = useState<boolean>(false)
   
   const bgColor = useColorModeValue('rgba(0, 0, 0, 0.9)', 'rgba(0, 0, 0, 0.95)')
   const stepColor = useColorModeValue('rgba(20, 20, 20, 0.8)', 'rgba(30, 30, 30, 0.8)')
@@ -412,11 +511,11 @@ const BeatMaker = ({ beatId }) => {
   const textColor = '#00ffff'
   const borderGlow = `0 0 10px ${textColor}, 0 0 20px ${textColor}, 0 0 30px ${textColor}`
 
-  const instrumentsRef = useRef(null)
-  const analyserRef = useRef(null)
-  const canvasRef = useRef(null)
-  const animationFrameRef = useRef(null)
-  const effectsRef = useRef(null)
+  const instrumentsRef = useRef<AudioRefs['instruments']>({})
+  const effectsRef = useRef<AudioRefs['effects']>({})
+  const analyserRef = useRef<AudioRefs['analyser']>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animationFrameRef = useRef<number | null>(null)
 
   // Load beat if beatId is provided
   useEffect(() => {
@@ -453,11 +552,14 @@ const BeatMaker = ({ beatId }) => {
         volume: 0,
         pan: 0,
         limiter: new Tone.Limiter(-3),
-        analyzer: new Tone.Analyser('waveform', 128)
       }).toDestination()
 
+      const analyser = new Tone.Analyser('waveform', 128)
+      masterBus.connect(analyser)
+      analyserRef.current = analyser
+
       // Create mixer channels with effects
-      const channels = {}
+      const channels: { [key: string]: Tone.Channel } = {}
       Object.keys(MIXER_CHANNELS).forEach(channel => {
         channels[channel] = new Tone.Channel({
           volume: mixerSettings[channel].volume,
@@ -468,24 +570,29 @@ const BeatMaker = ({ beatId }) => {
       })
 
       // Initialize instruments with selected drum kit
-      const instruments = {}
+      const instruments: AudioRefs['instruments'] = {}
       Object.entries(INSTRUMENTS.DRUMS).forEach(([name, config]) => {
         const preset = config.presets[drumKit]
-        instruments[name] = new Tone[config.type === 'membrane' ? 'MembraneSynth' : 
-                                   config.type === 'noise' ? 'NoiseSynth' : 
-                                   'MetalSynth']({
+        const SynthClass = config.type === 'membrane' ? Tone.MembraneSynth :
+                          config.type === 'noise' ? Tone.NoiseSynth :
+                          Tone.MetalSynth
+        instruments[name] = new SynthClass({
           ...config.options,
           ...preset
         }).connect(channels[name])
       })
 
       // Initialize effects with presets
-      const effects = {}
+      const effects: AudioRefs['effects'] = {}
       Object.entries(EFFECTS).forEach(([name, config]) => {
         const preset = config.presets[effectPresets[name]]
-        effects[name] = new Tone[config.type === 'reverb' ? 'Reverb' :
-                                config.type === 'delay' ? 'FeedbackDelay' :
-                                config.type]({
+        const EffectClass = config.type === 'reverb' ? Tone.Reverb :
+                           config.type === 'delay' ? Tone.FeedbackDelay :
+                           config.type === 'chorus' ? Tone.Chorus :
+                           config.type === 'phaser' ? Tone.Phaser :
+                           config.type === 'distortion' ? Tone.Distortion :
+                           Tone.BitCrusher
+        effects[name] = new EffectClass({
           ...config.options,
           ...preset
         })
@@ -496,7 +603,7 @@ const BeatMaker = ({ beatId }) => {
 
       instrumentsRef.current = instruments
       effectsRef.current = effects
-      
+
       // Set up transport
       Tone.Transport.bpm.value = bpm
       Tone.Transport.swing = swing
@@ -506,7 +613,7 @@ const BeatMaker = ({ beatId }) => {
       const loop = new Tone.Sequence(
         (time, step) => {
           Object.entries(patterns).forEach(([trackId, pattern]) => {
-            if (pattern[step] && !mixerSettings[trackId].mute && 
+            if (pattern[step] && !mixerSettings[trackId].mute &&
                (!Object.values(mixerSettings).some(ch => ch.solo) || mixerSettings[trackId].solo)) {
               const instrument = instruments[trackId]
               if (trackId === 'synth') {
@@ -528,11 +635,17 @@ const BeatMaker = ({ beatId }) => {
             }
           })
           setCurrentStep(step)
-          updateVisualization()
+          if (analyserRef.current && canvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d') as unknown as VisualizationContext
+            const bufferLength = analyserRef.current.frequencyBinCount
+            const dataArray = new Uint8Array(bufferLength)
+            analyserRef.current.getByteFrequencyData(dataArray)
+            drawVisualization(ctx, dataArray, bufferLength, canvasRef.current)
+          }
         },
         [...Array(TOTAL_STEPS).keys()],
         '16n'
-      )
+      ).start(0)
 
       return () => {
         loop.dispose()
@@ -540,14 +653,20 @@ const BeatMaker = ({ beatId }) => {
         Object.values(effects).forEach(effect => effect.dispose())
         Object.values(channels).forEach(channel => channel.dispose())
         masterBus.dispose()
+        analyser.dispose()
       }
     }
 
     setupAudio()
-  }, [bpm, patterns, mixerSettings, drumKit, effectPresets, quantize, swing])
+  }, [bpm, patterns, mixerSettings, drumKit, effectPresets, quantize, swing, velocities])
 
   // Enhanced visualization
-  const drawVisualization = (ctx, dataArray, bufferLength, canvas) => {
+  const drawVisualization = (
+    ctx: VisualizationContext,
+    dataArray: Uint8Array,
+    bufferLength: number,
+    canvas: HTMLCanvasElement
+  ): void => {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     switch (visualStyle) {
@@ -571,7 +690,12 @@ const BeatMaker = ({ beatId }) => {
     }
   }
 
-  const drawBars = (ctx, dataArray, bufferLength, canvas) => {
+  const drawBars = (
+    ctx: VisualizationContext,
+    dataArray: Uint8Array,
+    bufferLength: number,
+    canvas: HTMLCanvasElement
+  ): void => {
     const barWidth = (canvas.width / bufferLength) * 2.5
     let x = 0
 
@@ -590,7 +714,12 @@ const BeatMaker = ({ beatId }) => {
     }
   }
 
-  const drawWave = (ctx, dataArray, bufferLength, canvas) => {
+  const drawWave = (
+    ctx: VisualizationContext,
+    dataArray: Uint8Array,
+    bufferLength: number,
+    canvas: HTMLCanvasElement
+  ): void => {
     ctx.beginPath()
     ctx.lineWidth = 2
     const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0)
@@ -619,7 +748,12 @@ const BeatMaker = ({ beatId }) => {
     ctx.stroke()
   }
 
-  const drawCircle = (ctx, dataArray, bufferLength, canvas) => {
+  const drawCircle = (
+    ctx: VisualizationContext,
+    dataArray: Uint8Array,
+    bufferLength: number,
+    canvas: HTMLCanvasElement
+  ): void => {
     const centerX = canvas.width / 2
     const centerY = canvas.height / 2
     const radius = Math.min(centerX, centerY) - 10
@@ -645,7 +779,12 @@ const BeatMaker = ({ beatId }) => {
     ctx.stroke()
   }
 
-  const drawParticles = (ctx, dataArray, bufferLength, canvas) => {
+  const drawParticles = (
+    ctx: VisualizationContext,
+    dataArray: Uint8Array,
+    bufferLength: number,
+    canvas: HTMLCanvasElement
+  ): void => {
     const particles = []
     const particleCount = 50
 
@@ -676,7 +815,12 @@ const BeatMaker = ({ beatId }) => {
     })
   }
 
-  const drawMatrix = (ctx, dataArray, bufferLength, canvas) => {
+  const drawMatrix = (
+    ctx: VisualizationContext,
+    dataArray: Uint8Array,
+    bufferLength: number,
+    canvas: HTMLCanvasElement
+  ): void => {
     ctx.fillStyle = 'rgba(0, 255, 255, 0.1)'
     ctx.font = '10px monospace'
 
@@ -696,10 +840,9 @@ const BeatMaker = ({ beatId }) => {
     if (!canvasRef.current || !analyserRef.current) return
 
     const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d') as unknown as VisualizationContext
     const analyser = analyserRef.current
     
-    // Set canvas size to match display size
     const { width, height } = canvas.getBoundingClientRect()
     canvas.width = width
     canvas.height = height
@@ -714,7 +857,7 @@ const BeatMaker = ({ beatId }) => {
     }
 
     draw()
-  }, [])
+  }, [visualStyle])
 
   const stopVisualization = useCallback(() => {
     if (animationFrameRef.current) {
@@ -775,7 +918,7 @@ const BeatMaker = ({ beatId }) => {
     )
   }, [])
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     if (!user) {
       toast({
         title: 'Please login',
@@ -787,8 +930,9 @@ const BeatMaker = ({ beatId }) => {
       return
     }
 
+    setIsSaving(true)
     try {
-      const beatData = {
+      const beatData: Beat = {
         title,
         patterns,
         bpm,
@@ -808,14 +952,17 @@ const BeatMaker = ({ beatId }) => {
         duration: 3000,
         isClosable: true,
       })
+      onClose()
     } catch (error) {
       toast({
         title: 'Error saving beat',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An error occurred',
         status: 'error',
         duration: 3000,
         isClosable: true,
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -1027,56 +1174,6 @@ const BeatMaker = ({ beatId }) => {
       })
     }
   }, [title, patterns, bpm, genre, drumKit, mixerSettings, effectPresets, activeEffects, quantize, swing, velocities, toast])
-
-  // Save beat function
-  const saveBeat = async () => {
-    if (!title.trim()) {
-      toast({
-        title: 'Title required',
-        description: 'Please give your beat a title',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      const beatData = {
-        title,
-        patterns,
-        bpm,
-        genre,
-        comment: comment.trim(),
-      }
-
-      if (beatId) {
-        await beatApi.updateBeat(beatId, beatData)
-      } else {
-        await beatApi.createBeat(beatData)
-      }
-
-      toast({
-        title: 'Success',
-        description: `Beat ${beatId ? 'updated' : 'saved'} successfully`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
-      onClose()
-    } catch (error) {
-      toast({
-        title: 'Error saving beat',
-        description: error.message,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   return (
     <Box
@@ -1530,7 +1627,7 @@ const BeatMaker = ({ beatId }) => {
               />
               <Button
                 colorScheme="brand"
-                onClick={saveBeat}
+                onClick={handleSave}
                 isLoading={isSaving}
                 loadingText="Saving..."
                 w="full"
