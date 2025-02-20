@@ -35,10 +35,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+    defaults:
+      run:
+        working-directory: frontend
+        shell: bash
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Debug - List workspace contents
+        run: |
+          pwd
+          ls -la
+          echo "Current directory structure:"
+          tree -L 2 || true
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -47,8 +58,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: 'frontend/pnpm-lock.yaml'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -56,15 +65,29 @@ jobs:
           version: 8
           run_install: false
 
-      - name: Install dependencies
-        working-directory: frontend
+      - name: Debug - Verify pnpm installation
         run: |
+          pnpm --version
+          echo "PNPM store path:"
+          pnpm store path
+          echo "Package file exists:"
+          test -f package.json && echo "Yes" || echo "No"
+          echo "Lock file exists:"
+          test -f pnpm-lock.yaml && echo "Yes" || echo "No"
+
+      - name: Install dependencies
+        run: |
+          echo "Installing dependencies..."
           pnpm install --no-frozen-lockfile
-          pnpm store prune
+          echo "Dependencies installed successfully"
 
       - name: Build frontend
-        working-directory: frontend
-        run: pnpm run build
+        run: |
+          echo "Starting build process..."
+          pnpm run build
+          echo "Build completed"
+          echo "Dist directory contents:"
+          ls -la dist
         env:
           VITE_APP_API_URL: 'https://${{ github.repository_owner }}.github.io/beatflow'
           VITE_APP_WS_URL: 'wss://api.beatflow.app'
