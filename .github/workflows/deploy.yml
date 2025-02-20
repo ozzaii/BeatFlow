@@ -79,6 +79,8 @@ jobs:
           test -f package.json && echo "Yes" || echo "No"
           echo "Lock file exists:"
           test -f pnpm-lock.yaml && echo "Yes" || echo "No"
+          echo "Package.json contents:"
+          cat package.json
 
       - name: Install dependencies
         working-directory: frontend
@@ -86,12 +88,21 @@ jobs:
           echo "Installing dependencies..."
           pnpm install --no-frozen-lockfile
           echo "Dependencies installed successfully"
+          echo "Node modules contents:"
+          ls -la node_modules/.pnpm
+          echo "Installed package versions:"
+          pnpm list
 
       - name: Build frontend
         working-directory: frontend
         run: |
           echo "Starting build process..."
-          pnpm run build
+          echo "Environment variables:"
+          env | grep VITE_
+          echo "Vite config:"
+          cat vite.config.js
+          echo "Building..."
+          pnpm run build --debug
           echo "Build completed"
           echo "Dist directory contents:"
           ls -la dist
@@ -103,6 +114,7 @@ jobs:
           VITE_APP_BUILD_TIME: ${{ steps.timestamp.outputs.time }}
           VITE_APP_COMMIT_SHA: ${{ github.sha }}
           VITE_APP_BRANCH: ${{ github.ref_name }}
+          DEBUG: vite:*
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
