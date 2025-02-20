@@ -32,7 +32,7 @@ import {
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { FaPlay, FaStop, FaRandom, FaTrash, FaShare, FaSave, FaDownload, FaHeart, FaComment, FaMinus, FaPlus, FaSolo, FaMute, FaChevronUp, FaChevronDown } from 'react-icons/fa'
+import { FaPlay, FaStop, FaRandom, FaTrash, FaShare, FaSave, FaDownload, FaHeart, FaComment, FaMinus, FaPlus, FaVolumeUp, FaVolumeMute, FaChevronUp, FaChevronDown } from 'react-icons/fa'
 import * as Tone from 'tone'
 import { beatApi } from '../services/api'
 import { useAuth } from '../hooks/useAuth.jsx'
