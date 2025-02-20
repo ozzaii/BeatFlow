@@ -35,21 +35,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: frontend
-        shell: bash
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug - List workspace contents
+      - name: Verify repository structure
         run: |
-          pwd
+          echo "Current working directory: $(pwd)"
+          echo "Repository contents:"
           ls -la
-          echo "Current directory structure:"
-          tree -L 2 || true
+          echo "Checking frontend directory:"
+          if [ -d "frontend" ]; then
+            echo "✅ Frontend directory exists"
+            ls -la frontend/
+          else
+            echo "❌ Frontend directory not found"
+            exit 1
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -66,7 +69,9 @@ jobs:
           run_install: false
 
       - name: Debug - Verify pnpm installation
+        working-directory: frontend
         run: |
+          echo "Current working directory: $(pwd)"
           pnpm --version
           echo "PNPM store path:"
           pnpm store path
@@ -76,12 +81,14 @@ jobs:
           test -f pnpm-lock.yaml && echo "Yes" || echo "No"
 
       - name: Install dependencies
+        working-directory: frontend
         run: |
           echo "Installing dependencies..."
           pnpm install --no-frozen-lockfile
           echo "Dependencies installed successfully"
 
       - name: Build frontend
+        working-directory: frontend
         run: |
           echo "Starting build process..."
           pnpm run build
