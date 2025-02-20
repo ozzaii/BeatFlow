@@ -49,28 +49,35 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
         with:
-          targets: wasm32-unknown-unknown
-          components: rustfmt, clippy
-          profile: minimal
+          version: 8
+          run_install: false
 
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: |
           cd frontend
-          npm ci
+          pnpm install --frozen-lockfile
 
       - name: Build frontend
         run: |
           cd frontend
-          npm run build
+          pnpm run build
         env:
           VITE_APP_API_URL: 'https://${{ github.repository_owner }}.github.io/beatflow'
           VITE_APP_WS_URL: 'wss://api.beatflow.app'
