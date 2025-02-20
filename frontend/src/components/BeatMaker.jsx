@@ -300,6 +300,11 @@ const EFFECTS = {
       delayTime: 3.5,
       depth: 0.7,
       wet: 0.3
+    },
+    presets: {
+      'Light': { frequency: 1.0, delayTime: 2.5, depth: 0.5, wet: 0.2 },
+      'Medium': { frequency: 1.5, delayTime: 3.5, depth: 0.7, wet: 0.3 },
+      'Heavy': { frequency: 2.0, delayTime: 4.5, depth: 0.9, wet: 0.4 }
     }
   },
   phaser: {
@@ -309,6 +314,11 @@ const EFFECTS = {
       octaves: 3,
       stages: 10,
       wet: 0.3
+    },
+    presets: {
+      'Slow': { frequency: 0.3, octaves: 2, stages: 8, wet: 0.2 },
+      'Medium': { frequency: 0.5, octaves: 3, stages: 10, wet: 0.3 },
+      'Fast': { frequency: 0.8, octaves: 4, stages: 12, wet: 0.4 }
     }
   },
   distortion: {
@@ -316,6 +326,11 @@ const EFFECTS = {
     options: {
       distortion: 0.4,
       wet: 0.3
+    },
+    presets: {
+      'Light': { distortion: 0.2, wet: 0.2 },
+      'Medium': { distortion: 0.4, wet: 0.3 },
+      'Heavy': { distortion: 0.6, wet: 0.4 }
     }
   },
   bitcrusher: {
@@ -323,6 +338,11 @@ const EFFECTS = {
     options: {
       bits: 8,
       wet: 0.3
+    },
+    presets: {
+      '8-bit': { bits: 8, wet: 0.3 },
+      '6-bit': { bits: 6, wet: 0.4 },
+      '4-bit': { bits: 4, wet: 0.5 }
     }
   }
 }
@@ -366,7 +386,11 @@ const BeatMaker = ({ beatId }) => {
   const [drumKit, setDrumKit] = useState('909')
   const [effectPresets, setEffectPresets] = useState({
     reverb: 'Small Room',
-    delay: 'Slap'
+    delay: 'Slap',
+    chorus: 'Light',
+    phaser: 'Slow',
+    distortion: 'Light',
+    bitcrusher: '8-bit'
   })
   const [showMixer, setShowMixer] = useState(false)
   const [showEffects, setShowEffects] = useState(false)
@@ -1381,17 +1405,19 @@ const BeatMaker = ({ beatId }) => {
                         colorScheme="brand"
                       />
                     </HStack>
-                    <Select
-                      value={effectPresets[effect]}
-                      onChange={(e) => updateEffectPreset(effect, e.target.value)}
-                      variant="filled"
-                      size="sm"
-                      isDisabled={!activeEffects[effect]}
-                    >
-                      {Object.keys(config.presets).map(preset => (
-                        <option key={preset} value={preset}>{preset}</option>
-                      ))}
-                    </Select>
+                    {config.presets && (
+                      <Select
+                        value={effectPresets[effect] || Object.keys(config.presets)[0]}
+                        onChange={(e) => updateEffectPreset(effect, e.target.value)}
+                        variant="filled"
+                        size="sm"
+                        isDisabled={!activeEffects[effect]}
+                      >
+                        {Object.keys(config.presets).map(preset => (
+                          <option key={preset} value={preset}>{preset}</option>
+                        ))}
+                      </Select>
+                    )}
                     {activeEffects[effect] && (
                       <SimpleGrid columns={2} spacing={4} w="full">
                         {Object.entries(config.options).map(([param, value]) => (
