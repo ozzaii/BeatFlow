@@ -17,7 +17,7 @@ import {
 } from '@chakra-ui/react'
 import { keyframes, css } from '@emotion/react'
 import { useState, useEffect, useCallback } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 import * as Tone from 'tone'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaMusic, FaHeadphones, FaWaveSquare } from 'react-icons/fa'
@@ -229,7 +229,7 @@ function App() {
     }
 
     return (
-      <Router basename={basename}>
+      <Router>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/studio" element={<BeatMaker />} />

@@ -36,28 +36,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NEXT_TELEMETRY_DISABLED: 1
-      HUSKY_SKIP_INSTALL: 1
       NODE_ENV: production
-      YARN_ENABLE_IMMUTABLE_INSTALLS: false
       
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          lfs: true
 
-      - name: Get timestamp
-        id: timestamp
-        run: echo "time=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
-          cache-dependency-path: '**/yarn.lock'
+          cache: 'npm'
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -66,203 +60,30 @@ jobs:
           components: rustfmt, clippy
           profile: minimal
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            brotli \
-            chromium-browser \
-            zopfli \
-            imagemagick \
-            wasm-opt
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "wasm-build"
-          cache-directories: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          cache-on-failure: true
-
-      - name: Cache build outputs
-        uses: actions/cache@v4
-        with:
-          path: |
-            dist
-            .next
-            .webpack
-            target
-            coverage
-            lighthouse-report.html
-            node_modules/.cache
-            ~/.npm
-            ~/.cache
-          key: ${{ runner.os }}-build-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Install dependencies
-        id: deps
-        run: |
-          yarn config set network-timeout 300000
-          yarn install --frozen-lockfile --prefer-offline --network-concurrency 1
-          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-        continue-on-error: false
-
-      - name: Lint and Format
-        if: success()
-        run: |
-          yarn lint --max-warnings=0
-          cargo fmt --all -- --check
-          cargo clippy --all-targets --all-features -- -D warnings
-        continue-on-error: true
+        run: npm install
 
       - name: Build WebAssembly
-        if: success()
-        run: |
-          cd wasm
-          RUSTFLAGS="-C target-feature=+simd128" wasm-pack build --target web --release --out-dir ../dist/wasm
-          cd ..
-          
-      - name: Optimize Wasm
-        run: |
-          find dist/wasm -name "*.wasm" -exec wasm-opt -O4 {} -o {}.opt \;
-          find dist/wasm -name "*.wasm.opt" -exec mv {} "${{}%.opt}" \;
+        run: npm run wasm:build
 
       - name: Build frontend
-        if: success()
-        run: |
-          yarn build
+        run: npm run build
         env:
-          REACT_APP_API_URL: https://${{ github.repository_owner }}.github.io/beatflow
-          REACT_APP_WS_URL: wss://api.beatflow.app
-          REACT_APP_ENVIRONMENT: ${{ inputs.environment || 'production' }}
-          REACT_APP_VERSION: ${{ github.sha }}
-          REACT_APP_BUILD_TIME: ${{ steps.timestamp.outputs.time }}
-          REACT_APP_COMMIT_SHA: ${{ github.sha }}
-          REACT_APP_BRANCH: ${{ github.ref_name }}
-          CI: false
-          GENERATE_SOURCEMAP: false
-
-      - name: Run performance checks
-        if: success()
-        run: |
-          yarn test:performance --chrome-flags="--headless --no-sandbox --disable-gpu"
-          yarn lighthouse --chrome-flags="--headless --no-sandbox --disable-gpu"
-        continue-on-error: true
-
-      - name: Optimize assets
-        if: success()
-        run: |
-          # Optimize SVGs
-          npx svgo -f dist/icons --multipass
-
-          # Optimize images
-          find dist -type f -regex ".*\.\(jpg\|jpeg\|png\|gif\)" -exec convert {} -strip -quality 85 {} \;
-
-          # Gzip compression
-          find dist -type f -regex ".*\.\(js\|css\|html\|json\|wasm\|svg\)" -exec gzip -9 -k {} \;
-
-          # Brotli compression
-          find dist -type f -regex ".*\.\(js\|css\|html\|json\|wasm\|svg\)" -exec brotli -9 {} \;
-
-          # Zopfli compression (better gzip)
-          find dist -type f -regex ".*\.\(js\|css\|html\|json\|wasm\|svg\)" -exec zopfli {} \;
-
-      - name: Generate bundle analysis
-        if: success()
-        run: |
-          yarn analyze
-        env:
-          ANALYZE: true
-          
-      - name: Set deployment variables
-        id: vars
-        run: |
-          echo "commit_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          echo "environment=${{ inputs.environment || 'production' }}" >> $GITHUB_OUTPUT
-
-      - name: Create report script
-        run: |
-          cat > generate-report.sh << 'EOL'
-          #!/bin/bash
-          
-          COMMIT="$1"
-          BRANCH="$2"
-          BUILD_TIME="$3"
-          ENV="$4"
-          
-          # Generate header
-          cat > deployment-report.md << EOF
-          # Deployment Report
-          ## Build Info
-          - Commit: $COMMIT
-          - Branch: $BRANCH
-          - Build Time: $BUILD_TIME
-          - Environment: $ENV
-
-          ## Asset Sizes
-          EOF
-          
-          # Add asset sizes
-          find dist -type f -exec du -h {} \; | sort -hr >> deployment-report.md
-          
-          # Add compression section
-          echo -e "\n## Compression Ratios" >> deployment-report.md
-          
-          # Add compression stats
-          find dist -type f -regex ".*\.\(js\|css\|html\|json\|wasm\|svg\)" | while read -r f; do
-            original_size=$(stat -f %z "$f")
-            gzip_size=$(stat -f %z "$f.gz" 2>/dev/null || echo "N/A")
-            brotli_size=$(stat -f %z "$f.br" 2>/dev/null || echo "N/A")
-            zopfli_size=$(stat -f %z "$f.zopfli" 2>/dev/null || echo "N/A")
-            
-            cat >> deployment-report.md << EOF
-
-            ### $(basename "$f")
-            - Original: $original_size bytes
-            - Gzip: $gzip_size bytes
-            - Brotli: $brotli_size bytes
-            - Zopfli: $zopfli_size bytes
-            EOF
-          done
-          EOL
-          
-          chmod +x generate-report.sh
-
-      - name: Generate deployment report
-        run: ./generate-report.sh "${{ github.sha }}" "${{ github.ref_name }}" "${{ steps.timestamp.outputs.time }}" "${{ inputs.environment || 'production' }}"
-
-      - name: Upload performance results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: build-artifacts
-          path: |
-            lighthouse-report.html
-            deployment-report.md
-            dist/analyzer
-            coverage
-          compression-level: 9
-          retention-days: 7
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-        with:
-          enablement: true
-          static_site_generator: webpack
+          VITE_APP_API_URL: 'https://${{ github.repository_owner }}.github.io/beatflow'
+          VITE_APP_WS_URL: 'wss://api.beatflow.app'
+          VITE_APP_ENVIRONMENT: ${{ inputs.environment || 'production' }}
+          VITE_APP_VERSION: ${{ github.sha }}
+          VITE_APP_BUILD_TIME: ${{ steps.timestamp.outputs.time }}
+          VITE_APP_COMMIT_SHA: ${{ github.sha }}
+          VITE_APP_BRANCH: ${{ github.ref_name }}
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
-          retention-days: 1
+          path: './build'
 
   deploy:
     environment:
@@ -273,7 +94,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3
+        uses: actions/deploy-pages@v4
         with:
           timeout: 600000
           

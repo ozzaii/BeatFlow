@@ -8,7 +8,7 @@ const CompressionPlugin = require('compression-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const isProduction = process.env.NODE_ENV === 'production';
-const isGitHubPages = process.env.DEPLOY_TARGET === 'gh-pages';
+const isGitHubPages = true; // Always build for GitHub Pages
 
 module.exports = {
   entry: {
@@ -17,9 +17,9 @@ module.exports = {
   },
 
   output: {
-    path: path.resolve(__dirname, '../dist'),
+    path: path.resolve(__dirname, '../build'), // Changed from dist to build
     filename: '[name].[contenthash].js',
-    publicPath: isGitHubPages ? '/beatflow/' : '/',
+    publicPath: '/beatflow/',
     webassemblyModuleFilename: 'wasm/[hash].wasm',
     clean: true,
   },
@@ -185,8 +185,9 @@ module.exports = {
     // Environment variables
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-      'process.env.PUBLIC_URL': JSON.stringify(isGitHubPages ? '/beatflow' : ''),
+      'process.env.PUBLIC_URL': JSON.stringify('/beatflow'),
       'process.env.REACT_APP_VERSION': JSON.stringify(process.env.npm_package_version),
+      'process.env.REACT_APP_BASE_PATH': JSON.stringify('/beatflow'),
     }),
 
     // Compression
@@ -213,7 +214,11 @@ module.exports = {
   },
 
   devServer: {
-    historyApiFallback: true,
+    historyApiFallback: {
+      rewrites: [
+        { from: /^\/beatflow\/.*$/, to: '/beatflow/index.html' },
+      ],
+    },
     hot: true,
     compress: true,
     port: 3000,
@@ -223,7 +228,7 @@ module.exports = {
     },
     static: {
       directory: path.join(__dirname, '../public'),
-      publicPath: isGitHubPages ? '/beatflow' : '/',
+      publicPath: '/beatflow/',
     },
   },
 
