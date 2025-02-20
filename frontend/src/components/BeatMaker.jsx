@@ -63,7 +63,8 @@ import {
   FaSlidersH,
   FaVolumeDown,
   FaVolumeOff,
-  FaVolumeMute as FaSolo
+  FaVolumeMute as FaSolo,
+  FaVolumeMute as FaMute
 } from 'react-icons/fa'
 import * as Tone from 'tone'
 import { beatApi } from '../services/api'
